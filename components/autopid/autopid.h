@@ -111,24 +111,35 @@ typedef enum {
     DETECTION_ALWAYS,        
     DETECTION_VOLTAGE,       
     DETECTION_ADAPTIVE_RPM,
-    DETECTION_MQTT
+    DETECTION_MQTT,
+    DETECTION_CUSTOM_PID
 } detection_method_t;
 
 // [NEW] Group Structure (References Master List)
 typedef struct {
     char *name;
-    char *mqtt_topic;           // <--- [NEW] Group-specific MQTT topic
+    char *mqtt_topic;           
     bool enabled;
     char *init;                 
     detection_method_t detection_method; 
     uint32_t period;            
     wc_timer_t timer;           
-    pid_data_t **pids;          // Array of POINTERS to the master list
+    pid_data_t **pids;          
     uint32_t pid_count;         
     uint32_t consecutive_errors;
     bool mqtt_active_flag;
-    wc_timer_t mqtt_active_timer;   // <-- [NEW] Watchdog timer for MQTT activation
+    wc_timer_t mqtt_active_timer;   
     bool mqtt_timer_disabled;
+
+    // --- NEW: Gatekeeper Variables ---
+    float wake_voltage;
+    char *custom_pid_init;
+    char *custom_pid_mode;
+    char *custom_pid_expr;
+    char *custom_pid_operator;
+    float custom_pid_value;
+    int64_t next_allowed_time_ms; // Used for the 3-second timeout backoff
+    // ---------------------------------
 } pid_group_t;
 
 // HTTP(S) auth types supported by https_client_mgr_request_with_auth

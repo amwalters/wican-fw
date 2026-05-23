@@ -2492,22 +2492,40 @@ async function storeAutoTableData() {
             
             if (activeCar && activeCar.pid_groups) {
                 // Deep copy to avoid mutating the original until save is successful
+		
                 let groupsToSave = JSON.parse(JSON.stringify(activeCar.pid_groups));
                 
                 groupsToSave.forEach((group, gIndex) => {
                     // Capture Group Header fields
+
                     const gName = document.getElementById(`g_${gIndex}_name`);
                     const gCond = document.getElementById(`g_${gIndex}_cond`);
                     const gInit = document.getElementById(`g_${gIndex}_init`);
                     const gPeriod = document.getElementById(`g_${gIndex}_period`);
-		    const gEn = document.getElementById(`g_${gIndex}_en_group`);
-		    const gMqtt = document.getElementById(`g_${gIndex}_mqtt_topic`);
+                    const gEn = document.getElementById(`g_${gIndex}_en_group`);
+                    const gMqtt = document.getElementById(`g_${gIndex}_mqtt_topic`);
+
+                    // NEW FIELDS: Capture Gatekeeper Logic (Init & Expr included)
+                    const gWakeVolt = document.getElementById(`g_${gIndex}_wake_voltage`);
+                    const gPidInit = document.getElementById(`g_${gIndex}_custom_pid_init`);
+                    const gPidMode = document.getElementById(`g_${gIndex}_custom_pid_mode`);
+                    const gPidExpr = document.getElementById(`g_${gIndex}_custom_pid_expr`);
+                    const gPidOp = document.getElementById(`g_${gIndex}_custom_pid_operator`);
+                    const gPidVal = document.getElementById(`g_${gIndex}_custom_pid_value`);
 
                     if (gName) group.group_name = gName.value;
                     if (gCond) group.condition = gCond.value;
                     if (gInit) group.init = gInit.value;
                     if (gPeriod) group.period = parseInt(gPeriod.value) || 0;
-		    if (gEn) group.enabled = gEn.checked;
+                    if (gEn) group.enabled = gEn.checked;
+
+                    // NEW FIELDS: Bind to memory
+                    if (gWakeVolt) group.wake_voltage = parseFloat(gWakeVolt.value);
+                    if (gPidInit) group.custom_pid_init = gPidInit.value;
+                    if (gPidMode) group.custom_pid_mode = gPidMode.value;
+                    if (gPidExpr) group.custom_pid_expr = gPidExpr.value;
+                    if (gPidOp) group.custom_pid_operator = gPidOp.value;
+                    if (gPidVal) group.custom_pid_value = parseFloat(gPidVal.value);
 
                     // Capture PIDs inside the group
                     if (group.pids && Array.isArray(group.pids)) {
@@ -6209,19 +6227,35 @@ function syncGroupsFromUIToMemory() {
 
     // Reuse the logic from storeAutoTableData to capture values
     activeCar.pid_groups.forEach((group, gIndex) => {
+
         const gName = document.getElementById(`g_${gIndex}_name`);
         const gCond = document.getElementById(`g_${gIndex}_cond`);
         const gInit = document.getElementById(`g_${gIndex}_init`);
         const gPeriod = document.getElementById(`g_${gIndex}_period`);
-	const gEn = document.getElementById(`g_${gIndex}_en_group`);
-	const gMqtt = document.getElementById(`g_${gIndex}_mqtt_topic`);
+        const gEn = document.getElementById(`g_${gIndex}_en_group`);
+        const gMqtt = document.getElementById(`g_${gIndex}_mqtt_topic`);
+
+        // NEW FIELDS: Capture Gatekeeper Logic (Init & Expr included)
+        const gWakeVolt = document.getElementById(`g_${gIndex}_wake_voltage`);
+        const gPidInit = document.getElementById(`g_${gIndex}_custom_pid_init`);
+        const gPidMode = document.getElementById(`g_${gIndex}_custom_pid_mode`);
+        const gPidExpr = document.getElementById(`g_${gIndex}_custom_pid_expr`);
+        const gPidOp = document.getElementById(`g_${gIndex}_custom_pid_operator`);
+        const gPidVal = document.getElementById(`g_${gIndex}_custom_pid_value`);
 
         if (gName) group.group_name = gName.value;
         if (gCond) group.condition = gCond.value;
         if (gInit) group.init = gInit.value;
         if (gPeriod) group.period = parseInt(gPeriod.value) || 0;
-	if (gEn) group.enabled = gEn.checked;
+        if (gEn) group.enabled = gEn.checked;
 
+        // NEW FIELDS: Bind to memory
+        if (gWakeVolt) group.wake_voltage = parseFloat(gWakeVolt.value);
+        if (gPidInit) group.custom_pid_init = gPidInit.value;
+        if (gPidMode) group.custom_pid_mode = gPidMode.value;
+        if (gPidExpr) group.custom_pid_expr = gPidExpr.value;
+        if (gPidOp) group.custom_pid_operator = gPidOp.value;
+        if (gPidVal) group.custom_pid_value = parseFloat(gPidVal.value);
         if (group.pids) {
             group.pids.forEach((pid, pIndex) => {
                 const pName = document.getElementById(`g_${gIndex}_p_${pIndex}_name`);
@@ -6764,12 +6798,14 @@ function renderVehicleGroups(groupsData) {
         gArrow.onclick = () => { group._collapsed = !group._collapsed; renderVehicleGroups(); };
         r1Left.appendChild(gArrow);
 
-        // Group Name
+
+	// Group Name
         const gNameInput = document.createElement('input');
+        gNameInput.id = `g_${gIndex}_name`; 
         gNameInput.value = group.group_name || `Group ${gIndex + 1}`;
         gNameInput.placeholder = "Group Name";
         gNameInput.style.cssText = "font-weight:bold; font-size:1.05rem; border:none; background:transparent; border-bottom:1px dashed #cbd5e1; width:300px;";
-        gNameInput.onchange = (e) => { group.group_name = e.target.value; };
+        gNameInput.onchange = (e) => { group.group_name = e.target.value; enableAutoStoreButton(); };
         r1Left.appendChild(gNameInput);
 
         // Period Input
@@ -6777,12 +6813,12 @@ function renderVehicleGroups(groupsData) {
         periodWrapper.style.cssText = "display:flex; align-items:center; gap:4px; font-size:0.85rem; color:#64748b;";
         const gPeriodInput = document.createElement('input');
         gPeriodInput.type = "number";
+        gPeriodInput.id = `g_${gIndex}_period`; 
         gPeriodInput.value = group.period || 1000;
         gPeriodInput.style.cssText = "width:60px; padding:2px; border:1px solid #cbd5e1; border-radius:3px; text-align:center;";
-        gPeriodInput.onchange = (e) => { group.period = parseInt(e.target.value); };
+        gPeriodInput.onchange = (e) => { group.period = parseInt(e.target.value); enableAutoStoreButton(); };
         periodWrapper.appendChild(document.createTextNode("Period:"));
         periodWrapper.appendChild(gPeriodInput);
-
         periodWrapper.appendChild(document.createTextNode("ms"));
         r1Left.appendChild(periodWrapper);
 
@@ -6790,46 +6826,39 @@ function renderVehicleGroups(groupsData) {
 
         // Group Buttons (Play / Delete)
         const r1Right = document.createElement('div');
-        // Note: added align-items:center so the badge lines up perfectly with the dropdown
         r1Right.style.cssText = "display:flex; gap:5px; align-items:center;"; 
 
-        // --- MOVED: MQTT Active Badge ---
         const mqttBadge = document.createElement('span');
         mqttBadge.id = `mqtt_badge_g_${gIndex}`;
-        // Note: Changed margin-left to margin-right to space it slightly away from the dropdown
         mqttBadge.style.cssText = "display:none; background:#10b981; color:white; font-size:0.7rem; padding:2px 6px; border-radius:6px; margin-right:5px; font-weight:bold; box-shadow:0 0 4px rgba(16, 185, 129, 0.6); align-items:center;";
         mqttBadge.innerText = "MQTT ON";
         r1Right.appendChild(mqttBadge);
-        // --------------------------------
 
         const condSelect = document.createElement('select');
+        condSelect.id = `g_${gIndex}_cond`; 
         condSelect.style.cssText = "width:auto; padding:2px 4px; border:1px solid #cbd5e1; border-radius:3px; font-size:0.85rem; background:rgba(255,255,255,0.8); font-weight:500; color:#334155;";	
   
-        // --- NEW: Added 'mqtt_on_demand' to the dropdown options ---
-        ["always", "voltage", "engine_running", "mqtt_on_demand"].forEach(opt => {
+        ["always", "voltage", "engine_running", "mqtt_on_demand", "custom_pid"].forEach(opt => {
             const o = document.createElement('option');
             o.value = opt;
-            o.text = opt.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+            o.text = opt === "custom_pid" ? "Check Custom PID" : opt.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
             if ((group.condition || "always") === opt) o.selected = true;
             condSelect.appendChild(o);
         });
-        condSelect.onchange = (e) => { group.condition = e.target.value; };
         r1Right.appendChild(condSelect);
 	
-        // --- ADD THIS BLOCK: Group Enable Checkbox ---
         const gEnWrapper = document.createElement('label');
         gEnWrapper.style.cssText = "display:flex; align-items:center; gap:4px; font-size:0.85rem; cursor:pointer; margin-right: 10px; margin-left: 10px;";
         const gEnCheck = document.createElement('input');
         gEnCheck.type = "checkbox";
-        gEnCheck.id = `g_${gIndex}_en_group`; // Unique ID for the group
-        gEnCheck.checked = (group.enabled !== false); // Default to true
+        gEnCheck.id = `g_${gIndex}_en_group`; 
+        gEnCheck.checked = (group.enabled !== false); 
         gEnCheck.onclick = (e) => e.stopPropagation();
         gEnCheck.onchange = (e) => { group.enabled = e.target.checked; enableAutoStoreButton(); };
         gEnWrapper.appendChild(gEnCheck);
         gEnWrapper.appendChild(document.createTextNode("Enabled"));
         r1Right.appendChild(gEnWrapper);
 	
-        
         const gPlayBtn = document.createElement('button');
         gPlayBtn.innerHTML = '&#9658;';
         gPlayBtn.className = 'system-button';
@@ -6841,18 +6870,133 @@ function renderVehicleGroups(groupsData) {
         gDelBtn.className = 'system-button danger';
         gDelBtn.onclick = (e) => { e.stopPropagation(); deleteGroup(gIndex); };
 
-       r1Right.appendChild(gPlayBtn);
+        r1Right.appendChild(gPlayBtn);
         r1Right.appendChild(gDelBtn);
         headerRow1.appendChild(r1Right);
-        groupHeader.appendChild(headerRow1); // Append Row 1 first
+        groupHeader.appendChild(headerRow1);
+
+
+// --- NEW: Conditional Pre-Condition UI Block ---
+        const condInputsRow = document.createElement('div');
+        condInputsRow.style.cssText = "display:flex; align-items:center; gap:10px; padding-left:25px; width:100%; margin-top:5px;";
+
+        // 1. Voltage Container
+        const voltContainer = document.createElement('div');
+        // Use justify-content: center and width: 100% to perfectly center the group
+        voltContainer.style.cssText = "display:none; justify-content:center; align-items:center; gap:10px; width:100%; padding:5px 0;";
+        
+        const voltLabel = document.createElement('span');
+        voltLabel.style.cssText = "font-size:0.85rem; color:#64748b; font-weight:500; white-space:nowrap;";
+        voltLabel.innerText = "PID Polling Min Voltage:";
+        
+        const voltInput = document.createElement('input');
+        voltInput.type = "range";
+        voltInput.min = "10.0";
+        voltInput.max = "16.0";
+        voltInput.step = "0.1";
+        voltInput.id = `g_${gIndex}_wake_voltage`;
+        voltInput.value = group.wake_voltage || 13.4;
+        // Give the slider a fixed width so it doesn't stretch awkwardly when centered
+        voltInput.style.cssText = "width: 250px; cursor: pointer;";
+        
+        // Dynamic text display next to the slider
+        const voltValueDisplay = document.createElement('span');
+        voltValueDisplay.id = `g_${gIndex}_wake_voltage_display`;
+        voltValueDisplay.style.cssText = "font-size:0.85rem; font-weight:bold; color:#334155; min-width: 40px;";
+        voltValueDisplay.innerText = parseFloat(voltInput.value).toFixed(1) + "V";
+
+        // Update the span text and memory LIVE while the user drags
+        voltInput.oninput = (e) => { 
+            const val = parseFloat(e.target.value).toFixed(1);
+            voltValueDisplay.innerText = val + "V";
+            group.wake_voltage = parseFloat(val);
+        };
+        
+        // Only trigger the "Submit Changes" button to light up when they release the mouse
+        voltInput.onchange = (e) => { 
+            enableAutoStoreButton(); 
+        };
+        
+        voltContainer.appendChild(voltLabel);
+        voltContainer.appendChild(voltInput);
+        voltContainer.appendChild(voltValueDisplay);
+        condInputsRow.appendChild(voltContainer);
+
+        // 2. Custom PID Container
+        const pidContainer = document.createElement('div');
+        pidContainer.style.cssText = "display:none; align-items:center; gap:8px;";
+        const pidLabel = document.createElement('span');
+        pidLabel.style.cssText = "font-size:0.85rem; color:#64748b; font-weight:500;";
+        pidLabel.innerText = "Gatekeeper PID:";
+        
+        const pidInitInput = document.createElement('input');
+        pidInitInput.id = `g_${gIndex}_custom_pid_init`;
+        pidInitInput.value = group.custom_pid_init || '';
+        pidInitInput.placeholder = "Init (ATSH7E0)";
+        pidInitInput.style.cssText = "width:250px; padding:3px; border:1px solid #cbd5e1; border-radius:3px; font-size:0.85rem;";
+        pidInitInput.onchange = (e) => { group.custom_pid_init = e.target.value; enableAutoStoreButton(); };
+
+        const pidModeInput = document.createElement('input');
+        pidModeInput.id = `g_${gIndex}_custom_pid_mode`;
+        pidModeInput.value = group.custom_pid_mode || '';
+        pidModeInput.placeholder = "PID (2211A0)";
+        pidModeInput.style.cssText = "width:100px; padding:3px; border:1px solid #cbd5e1; border-radius:3px; font-size:0.85rem;";
+        pidModeInput.onchange = (e) => { group.custom_pid_mode = e.target.value; enableAutoStoreButton(); };
+
+        const pidExprInput = document.createElement('input');
+        pidExprInput.id = `g_${gIndex}_custom_pid_expr`;
+        pidExprInput.value = group.custom_pid_expr || 'A';
+        pidExprInput.placeholder = "Expr (A*256+B)";
+        pidExprInput.style.cssText = "width:110px; padding:3px; border:1px solid #cbd5e1; border-radius:3px; font-size:0.85rem;";
+        pidExprInput.onchange = (e) => { group.custom_pid_expr = e.target.value; enableAutoStoreButton(); };
+
+        const opSelect = document.createElement('select');
+        opSelect.id = `g_${gIndex}_custom_pid_operator`;
+        opSelect.style.cssText = "width:auto; padding:3px; border:1px solid #cbd5e1; border-radius:3px; font-size:0.85rem;";
+        [{v:"greater",t:">"}, {v:"equals",t:"=="}, {v:"less",t:"<"}].forEach(o => {
+            const opt = document.createElement('option');
+            opt.value = o.v; opt.text = o.t;
+            if ((group.custom_pid_operator || "greater") === o.v) opt.selected = true;
+            opSelect.appendChild(opt);
+        });
+        opSelect.onchange = (e) => { group.custom_pid_operator = e.target.value; enableAutoStoreButton(); };
+
+        const valInput = document.createElement('input');
+        valInput.type = "number";
+        valInput.id = `g_${gIndex}_custom_pid_value`;
+        valInput.value = group.custom_pid_value !== undefined ? group.custom_pid_value : 0;
+        valInput.style.cssText = "width:80px; padding:3px; border:1px solid #cbd5e1; border-radius:3px; font-size:0.85rem;";
+        valInput.onchange = (e) => { group.custom_pid_value = parseFloat(e.target.value); enableAutoStoreButton(); };
+
+        pidContainer.appendChild(pidLabel);
+        pidContainer.appendChild(pidInitInput);
+        pidContainer.appendChild(pidModeInput);
+        pidContainer.appendChild(pidExprInput);
+        pidContainer.appendChild(opSelect);
+        pidContainer.appendChild(valInput);
+        condInputsRow.appendChild(pidContainer);
+
+        // Inject the conditionally hidden row into the header
+        groupHeader.appendChild(condInputsRow);
+
+        // 3. Setup toggle logic 
+        const toggleCondUI = (val) => {
+            voltContainer.style.display = (val === 'voltage') ? 'flex' : 'none';
+            pidContainer.style.display = (val === 'custom_pid') ? 'flex' : 'none';
+            condInputsRow.style.display = (val === 'voltage' || val === 'custom_pid') ? 'flex' : 'none';
+        };
+        toggleCondUI(group.condition || "always");
+
+        condSelect.onchange = (e) => { 
+            group.condition = e.target.value; 
+            toggleCondUI(e.target.value);
+            enableAutoStoreButton();
+        };
 
 	
-
-
-	
-        // Header Row 2
+        // Header Row 2 (Init String & Count Badge)
         const headerRow2 = document.createElement('div');
-        headerRow2.style.cssText = "display:flex; align-items:center; gap:15px; padding-left:25px; width:100%;";
+        headerRow2.style.cssText = "display:flex; align-items:center; gap:15px; padding-left:25px; width:100%; margin-top:5px;";
         
         const pidCount = group.pids ? group.pids.length : 0;
         const countBadge = document.createElement('span');
@@ -6862,6 +7006,7 @@ function renderVehicleGroups(groupsData) {
         headerRow2.appendChild(countBadge);
 
         const gInitInput = document.createElement('input');
+        gInitInput.id = `g_${gIndex}_init`; // Fixed missing ID for saving
         gInitInput.value = group.init || '';
         gInitInput.placeholder = "Initialization String (e.g. ATTP6; ATZ;)";
         
@@ -6870,14 +7015,12 @@ function renderVehicleGroups(groupsData) {
         gInitInput.onclick = (e) => e.stopPropagation(); 
         headerRow2.appendChild(gInitInput);
 
-        // MOVED & JUSTIFIED: Add PID Button
         const addPidBtn = document.createElement('button');
         addPidBtn.innerText = "+ Add PID Card";
         addPidBtn.className = "system-button";
         addPidBtn.onclick = (e) => { e.stopPropagation(); addPID(gIndex); };
         headerRow2.appendChild(addPidBtn);
 
-        groupHeader.appendChild(headerRow1);
         groupHeader.appendChild(headerRow2);
         groupDiv.appendChild(groupHeader);
 	

@@ -823,6 +823,7 @@ static detection_method_t detection_method_from_str(const char* str) {
     if (strcasecmp(str, "engine_running") == 0) return DETECTION_ADAPTIVE_RPM;
     if (strcasecmp(str, "adaptive_rpm") == 0) return DETECTION_ADAPTIVE_RPM;
     if (strcasecmp(str, "mqtt_on_demand") == 0) return DETECTION_MQTT;
+    if (strcasecmp(str, "custom_pid") == 0) return DETECTION_CUSTOM_PID; // <--- ADD THIS
     return DETECTION_ALWAYS;
 }
 
@@ -934,6 +935,19 @@ autopid_config_t *load_autopid_config(void)
 
 		/* [NEW] Explicitly default MQTT flag to false on boot */
                 grp->mqtt_active_flag = false;
+
+		// --- NEW: Gatekeeper Parsing ---
+                grp->wake_voltage = json_item_to_float(cJSON_GetObjectItem(g, "wake_voltage"), 13.4f);
+		
+               cJSON *cp_init = cJSON_GetObjectItem(g, "custom_pid_init");
+                grp->custom_pid_init = (cp_init && cp_init->valuestring) ? normalize_init_string(cp_init->valuestring) : NULL;
+		
+                grp->custom_pid_mode = json_strdup_key_or_default(g, "custom_pid_mode", "");
+                grp->custom_pid_expr = json_strdup_key_or_default(g, "custom_pid_expr", "A");
+                grp->custom_pid_operator = json_strdup_key_or_default(g, "custom_pid_operator", "greater");
+                grp->custom_pid_value = json_item_to_float(cJSON_GetObjectItem(g, "custom_pid_value"), 0.0f);
+                grp->next_allowed_time_ms = 0; // Initialize backoff timer
+                // -------------------------------
                 
                 // Parse PIDs directly into Master List
                 cJSON *gpids = cJSON_GetObjectItem(g, "pids");

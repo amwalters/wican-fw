@@ -586,8 +586,12 @@ esp_err_t autopid_find_standard_pid(uint8_t protocol, char *available_pids, uint
         "01A0\r", // PIDs 0xA1-0xC0
     };
 
-    while (xQueueReceive(autopidQueue, response, pdMS_TO_TICKS(100)) == pdPASS)
-        ;
+   while (xQueueReceive(autopidQueue, response, pdMS_TO_TICKS(100)) == pdPASS) {
+        if (response->priority_data != NULL) {
+            free(response->priority_data);
+            response->priority_data = NULL;
+        }
+    }
     
     ESP_LOGI(TAG, "Starting PID support command processing");
     for (int i = 0; i < sizeof(pid_support_cmds) / sizeof(pid_support_cmds[0]); i++)
@@ -744,6 +748,12 @@ esp_err_t autopid_find_standard_pid(uint8_t protocol, char *available_pids, uint
     // while (xQueueReceive(autopidQueue, &response, pdMS_TO_TICKS(1000)) == pdPASS);
 
     cJSON_Delete(root);
+
+    // --- NEW: CLEANUP BEFORE RETURN ---
+    if (response->priority_data != NULL) {
+        free(response->priority_data);
+    }
+    
     free(response);
     // elm327_unlock();
     xSemaphoreGive(autopid_config->mutex);
@@ -888,7 +898,7 @@ static void autopid_data_update(autopid_config_t *pids)
 char *autopid_data_read(void)
 {
     // json_str must be freed by the caller
-    static char *json_str = NULL;
+    char *json_str = NULL;
 
     if (!autopid_data.mutex)
     {
@@ -2212,7 +2222,18 @@ char *autopid_get_config(void)
                     const char *cond_str = "always";
                     if (grp->detection_method == DETECTION_VOLTAGE) cond_str = "voltage";
                     else if (grp->detection_method == DETECTION_ADAPTIVE_RPM) cond_str = "engine_running";
+                    else if (grp->detection_method == DETECTION_MQTT) cond_str = "mqtt_on_demand";
+                    else if (grp->detection_method == DETECTION_CUSTOM_PID) cond_str = "custom_pid"; // <--- ADD THIS
                     cJSON_AddStringToObject(g_obj, "condition", cond_str);
+
+                    // --- NEW: Gatekeeper Export ---
+                    cJSON_AddNumberToObject(g_obj, "wake_voltage", grp->wake_voltage);
+                    if (grp->custom_pid_init) cJSON_AddStringToObject(g_obj, "custom_pid_init", grp->custom_pid_init);
+                    if (grp->custom_pid_mode) cJSON_AddStringToObject(g_obj, "custom_pid_mode", grp->custom_pid_mode);
+                    if (grp->custom_pid_expr) cJSON_AddStringToObject(g_obj, "custom_pid_expr", grp->custom_pid_expr);
+                    if (grp->custom_pid_operator) cJSON_AddStringToObject(g_obj, "custom_pid_operator", grp->custom_pid_operator);
+                    cJSON_AddNumberToObject(g_obj, "custom_pid_value", grp->custom_pid_value);
+                    // ------------------------------
 
                     // Add PIDs for this group
                     cJSON *pids_array = cJSON_CreateArray();
@@ -3019,6 +3040,11 @@ void autopid_parser(char *str, uint32_t len, QueueHandle_t *q, char *cmd_str)
                 if (xQueueSend(autopidQueue, response, pdMS_TO_TICKS(1000)) != pdPASS)
                 {
                     ESP_LOGE(TAG, "Failed to send to queue");
+		    // --- NEW: FREE IF QUEUE FULL ---
+                    if (response->priority_data != NULL) {
+                        free(response->priority_data);
+                        response->priority_data = NULL;
+                    }
                 }
             }
             else
@@ -3029,6 +3055,11 @@ void autopid_parser(char *str, uint32_t len, QueueHandle_t *q, char *cmd_str)
                 if (xQueueSend(autopidQueue, response, pdMS_TO_TICKS(1000)) != pdPASS)
                 {
                     ESP_LOGE(TAG, "Failed to send to queue");
+		    // --- NEW: FREE IF QUEUE FULL ---
+                    if (response->priority_data != NULL) {
+                        free(response->priority_data);
+                        response->priority_data = NULL;
+                    }
                 }
             }
             // Clear the buffer after parsing
@@ -3382,6 +3413,11 @@ static void execute_pid(pid_data_t *curr_pid, bool check_timers) {
                 }
             }
             ESP_LOGE(TAG, "Queue Timeout for %s", curr_pid->cmd);
+        }
+        // --- NEW: PLUG THE MEMORY LEAK ---
+        if (elm327_response.priority_data != NULL) {
+          free(elm327_response.priority_data);
+          elm327_response.priority_data = NULL;
         }
     } else {
         ESP_LOGE(TAG, "Process Cmd Failed: %s", curr_pid->cmd);
@@ -4287,7 +4323,6 @@ static void autopid_task(void *pvParameters)
     {
         static pid_type_t previous_pid_type = PID_MAX;
         static bool pid_polling_paused_prev = false;
-        static char *current_active_init = NULL; 
 
         dev_status_wait_for_bits(DEV_AUTOPID_ELM327_APP_BIT, portMAX_DELAY);
         
@@ -4349,7 +4384,7 @@ static void autopid_task(void *pvParameters)
                 ESP_LOGI(TAG, "PID polling resumed");
                 // Force init resend on next due PID to avoid stale ELM state.
                 previous_pid_type = PID_MAX;
-                current_active_init = NULL;
+                // not used current_active_init = NULL;
             }
             pid_polling_paused_prev = pid_polling_paused;
         }
@@ -4373,24 +4408,89 @@ static void autopid_task(void *pvParameters)
                     current_group_mqtt_topic = group->mqtt_topic;
 		    
                     bool active = true;
+                    int64_t now_ms = esp_timer_get_time() / 1000;
+
                     if (group->detection_method == DETECTION_VOLTAGE) {
-                        active = dev_status_is_wake_voltage_ok();
+                        float v = 0;
+                        if (sleep_mode_get_voltage(&v) == ESP_OK) {
+                            active = (v >= group->wake_voltage);
+                        } else {
+                            active = false;
+                        }
                     } else if (group->detection_method == DETECTION_ADAPTIVE_RPM) {
                         active = is_engine_running();	
                     } else if (group->detection_method == DETECTION_MQTT) {
                        if (group->mqtt_active_flag) {
-                           // Check if the timer is enabled AND if it has expired
                            if (!group->mqtt_timer_disabled && wc_timer_is_expired(&group->mqtt_active_timer)) {
                                group->mqtt_active_flag = false;
                                active = false;
                                ESP_LOGI(TAG, "Group '%s' MQTT timeout expired. Auto-disabling.", group->name);
-                           } else { 
-                               active = true; 
-                           }
-                       } else { 
-                           active = false; 
-                       }
-                    }    
+                           } else { active = true; }
+                       } else { active = false; }
+                    } else if (group->detection_method == DETECTION_CUSTOM_PID) {
+                        // --- NEW: THE GATEKEEPER LOGIC ---
+                        if (now_ms < group->next_allowed_time_ms) {
+                            active = false; // Still in 3-second cooldown
+                        } else {
+                            // 1. Send Init String
+                            if (group->custom_pid_init && strlen(group->custom_pid_init) > 0) {
+                                send_commands(group->custom_pid_init, 2);
+                            }
+                            
+                            // 2. Send PID Mode
+                            if (group->custom_pid_mode && strlen(group->custom_pid_mode) > 0) {
+                                char gate_cmd[32];
+                                snprintf(gate_cmd, sizeof(gate_cmd), "%s\r", group->custom_pid_mode);
+                                
+                                #if HARDWARE_VER == WICAN_PRO
+                                if (elm327_process_cmd((uint8_t *)gate_cmd, strlen(gate_cmd), &autopidQueue, elm327_autopid_cmd_buffer, &elm327_autopid_cmd_buffer_len, &elm327_autopid_last_cmd_time, autopid_parser) == ESP_OK)
+                                #else
+                                twai_message_t tx_msg;
+                                if (elm327_process_cmd((uint8_t *)gate_cmd, strlen(gate_cmd), &tx_msg, &autopidQueue) == ESP_OK)
+                                #endif
+                                {
+                                    response_t gate_resp;
+                                    memset(&gate_resp, 0, sizeof(gate_resp));
+                                    
+                                    // Important: Drop the master config lock while waiting on the physical CAN bus
+                                    xSemaphoreGive(autopid_config->mutex);
+                                    BaseType_t got = xQueueReceive(autopidQueue, &gate_resp, pdMS_TO_TICKS(500));
+                                    xSemaphoreTake(autopid_config->mutex, portMAX_DELAY);
+                                    
+                                    if (got == pdPASS && strstr((char*)gate_resp.data, "error") == NULL && strstr((char*)gate_resp.data, "NO DATA") == NULL) {
+                                        // 3. Evaluate Expression
+                                        double val = 0;
+                                        char* expr = (group->custom_pid_expr && strlen(group->custom_pid_expr) > 0) ? group->custom_pid_expr : "A";
+                                        
+                                        if (evaluate_expression((uint8_t*)expr, gate_resp.data, 0, &val)) {
+                                            bool cond_met = false;
+                                            if (group->custom_pid_operator && strcmp(group->custom_pid_operator, "greater") == 0 && val > group->custom_pid_value) cond_met = true;
+                                            else if (group->custom_pid_operator && strcmp(group->custom_pid_operator, "less") == 0 && val < group->custom_pid_value) cond_met = true;
+                                            else if (group->custom_pid_operator && strcmp(group->custom_pid_operator, "equals") == 0 && val == group->custom_pid_value) cond_met = true;
+                                            
+                                            if (cond_met) {
+                                                active = true; 
+                                            } else {
+                                                active = false;
+                                                group->next_allowed_time_ms = now_ms + 3000; // ECU answered, but failed condition. 3s backoff.
+                                            }
+                                        } else {
+                                            active = false;
+                                            group->next_allowed_time_ms = now_ms + 3000; // Math failed. 3s backoff.
+                                        }
+                                    } else {
+                                        active = false;
+                                        group->next_allowed_time_ms = now_ms + 3000; // No valid data. 3s backoff.
+                                    }
+                                } else {
+                                    active = false;
+                                    group->next_allowed_time_ms = now_ms + 3000; // Buffer full/TX failed. 3s backoff.
+                                }
+                            } else {
+                                active = false; // Missing PID to query
+                            }
+                        }
+                    }
 
                     if (!active) continue;
 
@@ -4410,7 +4510,7 @@ static void autopid_task(void *pvParameters)
                     if (group->init && strlen(group->init) > 0) {
                         /* RESTORED: Simple init send without flush loops */
                         send_commands(group->init, 5);
-                        current_active_init = group->init;
+                        // not used current_active_init = group->init;
                     }
 
                     for (uint32_t i = 0; i < group->pid_count; i++) {
@@ -4552,7 +4652,7 @@ if (any_param_enabled) {
 		        pids_polled = true;
                         if (curr_pid->pid_type != previous_pid_type) {
                             // FORCE a protocol reset when switching list types
-                            current_active_init = NULL; 
+                            // not used current_active_init = NULL; 
 
                             switch (curr_pid->pid_type) {
                                 case PID_CUSTOM: 
@@ -4628,7 +4728,7 @@ if (any_param_enabled) {
                 {
                     xEventGroupClearBits(xautopid_event_group, ECU_CONNECTED_BIT);
                     ESP_LOGW(TAG, "All parameters failed - ECU disconnected");
-		    current_active_init = NULL;
+		    // current_active_init = NULL;
                 }
                 else
                 {
