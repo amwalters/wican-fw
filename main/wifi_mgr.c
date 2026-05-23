@@ -1703,7 +1703,11 @@ static void wifi_reconnect_task(void* pvParameters) {
     const TickType_t reconnect_delay = pdMS_TO_TICKS(5000); // 5 seconds
     const TickType_t ap_client_check_delay = pdMS_TO_TICKS(10000); // 10 seconds
     const TickType_t home_check_interval = pdMS_TO_TICKS(300000); // 5 Minutes
-    TickType_t last_home_check = xTaskGetTickCount();    
+    TickType_t last_home_check = xTaskGetTickCount();
+
+    // --- NEW: Counter to prevent Wi-Fi thrashing ---
+    uint8_t dead_signal_count = 0;
+    // -----------------------------------------------
     
     ESP_LOGI(TAG, "WiFi reconnect task started");
     
@@ -1791,14 +1795,29 @@ static void wifi_reconnect_task(void* pvParameters) {
             }
             // -------------------------------------------------
 
+            // --- THE REVISED "STICKY CLIENT" ROAMING FIX ---
+            // Only force a disconnect if the signal is physically unusable (-92 dBm)
+            // AND remains that bad for 3 consecutive checks (15 seconds).
+            wifi_ap_record_t ap_info;
+            if (esp_wifi_sta_get_ap_info(&ap_info) == ESP_OK) {
+                if (ap_info.rssi <= -92) {
+                    dead_signal_count++;
+                    if (dead_signal_count >= 3) {
+                        ESP_LOGW(TAG, "Signal consistently dead (%d dBm). Forcing disconnect to trigger roaming.", ap_info.rssi);
+                        esp_wifi_disconnect();
+                        dead_signal_count = 0; // Reset after kicking
+                    }
+                } else {
+                    dead_signal_count = 0; // Signal recovered, reset the counter
+                }
+            }
+            // -----------------------------------------------
+
             vTaskDelay(reconnect_delay);
             continue;
         }
 
-
-
-	
-        // Check if we have a disconnection event or if we're already disconnected
+        // Check if we have a disconnection event or if we're already disconnected   
         bool should_reconnect = false;
         if (current_bits & WIFI_DISCONNECTED_BIT) {
             // Clear the disconnected bit since we're handling it

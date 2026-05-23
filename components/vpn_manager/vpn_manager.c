@@ -650,11 +650,15 @@ static void vpn_task_fn(void *arg)
     const TickType_t tick = pdMS_TO_TICKS(200);
     for (;;)
     {
+      // kww - code causing changing of Wifi not to connect
+      /*
         if(!dev_status_is_sta_connected())
         {
             dev_status_wait_for_bits(DEV_STA_CONNECTED_BIT, portMAX_DELAY);
             vTaskDelay(pdMS_TO_TICKS(3000));
         }
+      */
+      
         // Drain commands
         vpn_cmd_msg_t msg;
         while (s_vpn_cmd_q && xQueueReceive(s_vpn_cmd_q, &msg, 0) == pdTRUE)
@@ -729,8 +733,11 @@ static void vpn_task_fn(void *arg)
             {
                 ESP_LOGI(TAG, "Gating lost or blocker set; stopping VPN");
                 vpn_manager_stop();
+                
+                // --- THE USER'S FIX: Reset backoff so it reconnects instantly later ---
+                vpn_backoff_reset();
             }
-            // Idle state while waiting
+            // Idle state while waiting (keeps the task awake to read UI commands!)
             vTaskDelay(tick);
             continue;
         }
