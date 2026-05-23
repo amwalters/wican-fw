@@ -3491,7 +3491,7 @@ static void execute_pid(pid_data_t *curr_pid, bool check_timers) {
     // FREE THE HEAP POINTER!
     free(elm327_response);
 }
-
+		     
 static bool autopid_should_pause_pid_polling(float *out_voltage, const char **out_reason)
 {
     return power_detection_should_pause_pid_polling(autopid_config, out_voltage, out_reason);
