@@ -51,6 +51,8 @@
 #include "ha_webhooks.h"
 #include "autopid_config.h"
 #include "esp_heap_caps.h"
+#include "imu.h"
+#include "vehicle.h"
 
 // #define TAG __func__
 #define TAG "AUTO_PID"
@@ -58,6 +60,7 @@
 #define TEMP_BUFFER_LENGTH 32
 #define ECU_CONNECTED_BIT BIT0
 #define AUTOPID_POLL_JITTER_MS 100
+#define AUTOPID_IMU_STATIONARY_HOLD_MS (5 * 60 * 1000)
 
 // Backoff tuning (milliseconds)
 // How many consecutive failures before enabling backoff.
@@ -93,6 +96,8 @@ static QueueHandle_t protocolnumberQueue = NULL;
 static char *autopid_config_json = NULL;
 static StaticTimer_t autopid_bit_set_timer_buffer;
 static TimerHandle_t autopid_bit_set_timer_handle = NULL;
+static bool autopid_motion_was_active = false;
+static wc_timer_t autopid_imu_stationary_hold_timer = 0;
 
 static const char* current_group_mqtt_topic = NULL;
 
@@ -124,6 +129,43 @@ static void publish_parameter_mqtt(parameter_t *param);
 static void autopid_data_update(autopid_config_t *pids);
 static void autopid_processing_task(void *pvParameters);
 
+static const char *autopid_imu_activity_state_str(void)
+{
+    switch (imu_get_activity_state())
+    {
+    case ACTIVITY_STATE_ACTIVE:
+        return "active";
+    case ACTIVITY_STATE_STATIONARY:
+        return "stationary";
+    case ACTIVITY_STATE_INVALID:
+    default:
+        return "invalid";
+    }
+}
+
+static void autopid_add_motion_status_to_json(cJSON *root)
+{
+    float imu_x = 0.0f;
+    float imu_y = 0.0f;
+    float imu_z = 0.0f;
+
+    if (!root)
+        return;
+
+    const char *activity = autopid_imu_activity_state_str();
+    cJSON_AddStringToObject(root, "imu_activity", activity);
+    cJSON_AddBoolToObject(root, "imu_active", strcmp(activity, "active") == 0);
+    cJSON_AddBoolToObject(root, "drive_mode", dev_status_is_drive_mode_enabled());
+    cJSON_AddBoolToObject(root, "home_mode", dev_status_is_home_mode_enabled());
+
+    if (imu_read_accel(&imu_x, &imu_y, &imu_z) == ESP_OK)
+    {
+        cJSON_AddNumberToObject(root, "imu_accel_x", imu_x);
+        cJSON_AddNumberToObject(root, "imu_accel_y", imu_y);
+        cJSON_AddNumberToObject(root, "imu_accel_z", imu_z);
+    }
+}
+
 
 // --- HELPER: Check for RPM to detect Engine Running (NEW) ---
 static bool is_engine_running(void) {
@@ -145,6 +187,30 @@ static bool is_engine_running(void) {
             cJSON_Delete(root);
         }
         free(rpm_json);
+    }
+    return running;
+}
+
+// --- HELPER: Check for 12v supply ---
+static bool is_ready_mode(void) {
+    char *ready_json = autopid_get_value_by_name("DCDC Input Voltage");
+    //if (!rpm_json) rpm_json = autopid_get_value_by_name("Engine RPM"); 
+
+    bool running = false;
+    if (ready_json) {
+        cJSON *root = cJSON_Parse(ready_json);
+        if (root) {
+            cJSON *child = root->child;
+            while(child) {
+                if (cJSON_IsNumber(child)) {
+                    // DCDC Power Supply should be 300-400V when supplying power to the 12 system
+                    if (child->valuedouble > 100.0) running = true;
+                }
+                child = child->next;
+            }
+            cJSON_Delete(root);
+        }
+        free(ready_json);
     }
     return running;
 }
@@ -705,6 +771,7 @@ static void autopid_data_update(autopid_config_t *pids)
         cJSON *root = cJSON_CreateObject();
         if (root)
         {
+            autopid_add_motion_status_to_json(root);
 
             // 1. PIDs (Group-Aware Logic)
             if (pids->use_groups) {
@@ -3321,7 +3388,7 @@ static void execute_pid(pid_data_t *curr_pid, bool check_timers) {
     }
 }
 
-		     
+			     
 static bool autopid_should_pause_pid_polling(float *out_voltage, const char **out_reason)
 {
     if (out_voltage)
@@ -3331,6 +3398,47 @@ static bool autopid_should_pause_pid_polling(float *out_voltage, const char **ou
 
     if (!autopid_config)
         return false;
+
+    if (is_ready_mode())
+    {
+    //    if (out_reason)
+    //        *out_reason = "ready_mode";
+        return false;
+    }
+
+    if (autopid_config->imu_voltage_override_enabled)
+    {
+        vehicle_motion_state_t motion_state = vehicle_motion_state();
+        //vehicle_motion_state_t motion_state = VEHICLE_MOTION_ACTIVE;
+        if (motion_state == VEHICLE_MOTION_ACTIVE)
+        {
+//            autopid_motion_was_active = true;
+//            if (out_reason)
+//                *out_reason = "imu_active";
+            return false;
+        }
+
+//        if (autopid_motion_was_active)
+//        {
+//            autopid_motion_was_active = false;
+//            wc_timer_set(&autopid_imu_stationary_hold_timer, AUTOPID_IMU_STATIONARY_HOLD_MS);
+//            ESP_LOGI(TAG, "IMU became stationary, allowing PID polling for %d seconds",
+//                     AUTOPID_IMU_STATIONARY_HOLD_MS / 1000);
+//        }
+
+//        if (autopid_imu_stationary_hold_timer != 0 &&
+//            !wc_timer_is_expired(&autopid_imu_stationary_hold_timer))
+//        {
+//            if (out_reason)
+//                *out_reason = "imu_stationary_hold";
+//            return false;
+//        }
+//    }
+//    else
+//    {
+//        autopid_motion_was_active = false;
+//        autopid_imu_stationary_hold_timer = 0;
+    }
 
     // Mode: disable PID requests when below Power Saving -> Sleep Voltage threshold.
     // Uses dev_status voltage bit (set by sleep_mode task).
@@ -4382,6 +4490,7 @@ if (any_param_enabled) {
 
                         // 3. Publish the Bulk Payload
                         if (has_data && grp_json) {
+                            autopid_add_motion_status_to_json(grp_json);
                             limitJsonDecimalPrecision(grp_json);
                             if (config_server_get_mqtt_include_timestamp() == 1) {
                                 cJSON_AddNumberToObject(grp_json, "timestamp", (double)time(NULL));
@@ -4534,6 +4643,10 @@ if (any_param_enabled) {
         if (pid_polling_paused)
         {
             vTaskDelay(pdMS_TO_TICKS(20));
+        }
+        else
+        {
+            vTaskDelay(pdMS_TO_TICKS(1));
         }
     }
 }

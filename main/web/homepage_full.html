@@ -1509,6 +1509,16 @@
                         <span id="pid_polling_min_voltage_value">12.0</span>V
                     </td>
                 </tr>
+                <tr id="imu_voltage_override_row">
+                    <td>IMU Voltage Override:</td>
+                    <td>
+                        <input type="checkbox"
+                               id="imu_voltage_override"
+                               name="imu_voltage_override"
+                               onchange="enableAutoStoreButton(); submit_enable();"
+                               checked>
+                    </td>
+                </tr>
             </table>
             <div id="autopid_low_voltage_warning_div" style="display: none; margin: 8px 0;">
                 <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 1px solid #f59e0b; border-radius: 8px; padding: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">

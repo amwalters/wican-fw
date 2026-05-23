@@ -2265,6 +2265,10 @@ function loadAutoTable(jsonData) {
         setElementValue("grouping", data.grouping, 'disable');
         setElementValue("disable_on_sleep_voltage", data.disable_on_sleep_voltage, 'disable');
         setElementValue("pid_polling_min_voltage", data.pid_polling_min_voltage, '13.1');
+        const imuVoltageOverrideEl = document.getElementById("imu_voltage_override");
+        if (imuVoltageOverrideEl) {
+            imuVoltageOverrideEl.checked = data.imu_voltage_override === 'enable';
+        }
         const pidMinVoltEl = document.getElementById("pid_polling_min_voltage");
         const pidMinVoltValEl = document.getElementById("pid_polling_min_voltage_value");
         if (pidMinVoltEl && pidMinVoltValEl) pidMinVoltValEl.textContent = pidMinVoltEl.value;
@@ -2454,6 +2458,7 @@ async function storeAutoTableData() {
 
         const groupingValue = document.getElementById("grouping")?.value || 'disable';
         const disableOnSleepVoltageValue = document.getElementById("disable_on_sleep_voltage")?.value || 'automate_threshold';
+        const imuVoltageOverrideValue = document.getElementById("imu_voltage_override")?.checked ? 'enable' : 'disable';
         const pidPollingMinVoltageValueRaw = document.getElementById("pid_polling_min_voltage")?.value;
         const pidPollingMinVoltageValue = (() => {
             const n = parseFloat(pidPollingMinVoltageValueRaw);
@@ -2723,6 +2728,7 @@ async function storeAutoTableData() {
         const jsonData = {
             grouping: groupingValue,
             disable_on_sleep_voltage: disableOnSleepVoltageValue,
+            imu_voltage_override: imuVoltageOverrideValue,
             pid_polling_min_voltage: pidPollingMinVoltageValue,
             webhook_data_mode: webhook_data_mode,
             car_specific: carSpecificValue,

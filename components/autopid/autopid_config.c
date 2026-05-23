@@ -436,6 +436,7 @@ static void parse_auto_pid_json(autopid_config_t *autopid_config, int *pid_index
     cJSON *ha_discovery_item = cJSON_GetObjectItem(root, "ha_discovery");
     cJSON *disable_on_sleep_voltage_item = cJSON_GetObjectItem(root, "disable_on_sleep_voltage");
     cJSON *pid_polling_min_voltage_item = cJSON_GetObjectItem(root, "pid_polling_min_voltage");
+    cJSON *imu_voltage_override_item = cJSON_GetObjectItem(root, "imu_voltage_override");
     cJSON *cycle_item = cJSON_GetObjectItem(root, "cycle");
     cJSON *pid_validation_item = cJSON_GetObjectItem(root, "pid_validation");
     cJSON *standard_pids_item = cJSON_GetObjectItem(root, "standard_pids");
@@ -504,6 +505,19 @@ static void parse_auto_pid_json(autopid_config_t *autopid_config, int *pid_index
         if (v >= 9.0f && v <= 18.0f)
         {
             autopid_config->pid_polling_min_voltage = v;
+        }
+    }
+
+    autopid_config->imu_voltage_override_enabled = false;
+    if (imu_voltage_override_item)
+    {
+        if (cJSON_IsString(imu_voltage_override_item) && imu_voltage_override_item->valuestring)
+        {
+            autopid_config->imu_voltage_override_enabled = (strcmp(imu_voltage_override_item->valuestring, "disable") != 0);
+        }
+        else if (cJSON_IsBool(imu_voltage_override_item))
+        {
+            autopid_config->imu_voltage_override_enabled = cJSON_IsTrue(imu_voltage_override_item);
         }
     }
     
