@@ -106,6 +106,15 @@ extern "C" {
 #define ICM42670_REG_MADDR_R           0x7D
 #define ICM42670_REG_M_R               0x7E
 
+#define ICM42670_SMD_INT_BITS    0x08 // ICM42670_REG_INT_STATUS2<3>
+#define ICM42670_SMD_INT_SHIFT   3    // ICM42670_REG_INT_STATUS2<3>
+#define ICM42670_WOM_X_INT_BITS  0x04 // ICM42670_REG_INT_STATUS2<2>
+#define ICM42670_WOM_X_INT_SHIFT 2    // ICM42670_REG_INT_STATUS2<2>
+#define ICM42670_WOM_Y_INT_BITS  0x02 // ICM42670_REG_INT_STATUS2<1>
+#define ICM42670_WOM_Y_INT_SHIFT 1    // ICM42670_REG_INT_STATUS2<1>
+#define ICM42670_WOM_Z_INT_BITS  0x01 // ICM42670_REG_INT_STATUS2<0>
+#define ICM42670_WOM_Z_INT_SHIFT 0    // ICM42670_REG_INT_STATUS2<0>
+
 // MREG1 registers
 #define ICM42670_REG_TMST_CONFIG1    0x00
 #define ICM42670_REG_FIFO_CONFIG5    0x01
@@ -550,6 +559,16 @@ esp_err_t icm42670_config_int_pin(icm42670_t *dev, uint8_t int_pin, icm42670_int
  * @return `ESP_OK` on success
  */
 esp_err_t icm42670_set_int_sources(icm42670_t *dev, uint8_t int_pin, icm42670_int_source_t sources);
+
+/**
+ * @brief Read INT_STATUS2.
+ *        The SMD and WoM status bits in this register are clear-on-read.
+ *
+ * @param dev Device descriptor
+ * @param status INT_STATUS2 register value
+ * @return `ESP_OK` on success
+ */
+esp_err_t icm42670_read_int_status2(icm42670_t *dev, uint8_t *status);
 
 /**
  * @brief Configures the Wake on Motion (WoM) behaviour

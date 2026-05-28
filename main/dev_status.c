@@ -55,6 +55,7 @@ static const char* get_bit_name(EventBits_t bit)
         case DEV_TIME_SYNCED_BIT:     return "TIME_SYNCED";
         case DEV_VPN_ENABLED_BIT:     return "VPN_ENABLED";
         case DEV_WAKE_VOLTAGE_OK_BIT: return "WAKE_VOLTAGE_OK";
+        case DEV_AUTOPID_WAKE_BYPASS_LOW_VOLTAGE_BIT: return "AUTOPID_WAKE_BYPASS_LOW_VOLTAGE";
         default:                      return "UNKNOWN";
     }
 }
@@ -72,6 +73,7 @@ static void log_bits(const char* action, EventBits_t bits)
     if (bits & DEV_TIME_SYNCED_BIT)     ESP_LOGI(DEV_STATUS_TAG, "%s: TIME_SYNCED", action);
     if (bits & DEV_VPN_ENABLED_BIT)     ESP_LOGI(DEV_STATUS_TAG, "%s: VPN_ENABLED", action);
     if (bits & DEV_WAKE_VOLTAGE_OK_BIT) ESP_LOGI(DEV_STATUS_TAG, "%s: WAKE_VOLTAGE_OK", action);
+    if (bits & DEV_AUTOPID_WAKE_BYPASS_LOW_VOLTAGE_BIT) ESP_LOGI(DEV_STATUS_TAG, "%s: AUTOPID_WAKE_BYPASS_LOW_VOLTAGE", action);
 }
 
 void dev_status_init(void)

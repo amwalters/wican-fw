@@ -297,6 +297,18 @@ static esp_ble_adv_params_t heart_rate_adv_params = {
     .adv_filter_policy = ADV_FILTER_ALLOW_SCAN_ANY_CON_ANY,
 };
 
+static esp_ble_scan_params_t load_test_scan_params = {
+    .scan_type              = BLE_SCAN_TYPE_ACTIVE,
+    .own_addr_type          = BLE_ADDR_TYPE_PUBLIC,
+    .scan_filter_policy     = BLE_SCAN_FILTER_ALLOW_ALL,
+    .scan_interval          = 0x50,
+    .scan_window            = 0x30,
+    .scan_duplicate         = BLE_SCAN_DUPLICATE_DISABLE,
+};
+
+static volatile uint32_t pending_scan_duration_sec = 0;
+static volatile bool scan_active = false;
+
 static uint8_t sec_service_uuid[16] __attribute__((unused)) = {
     /* LSB <--------------------------------------------------------------------------------> MSB */
     //first uuid, 16bit, [12],[13] is the value
@@ -741,6 +753,38 @@ static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
             break;
         }
         ESP_LOGI(GATTS_TABLE_TAG, "advertising start success");
+        break;
+    case ESP_GAP_BLE_SCAN_PARAM_SET_COMPLETE_EVT:
+        if (param->scan_param_cmpl.status != ESP_BT_STATUS_SUCCESS) {
+            pending_scan_duration_sec = 0;
+            ESP_LOGE(GATTS_TABLE_TAG, "scan params set failed, error status = %x", param->scan_param_cmpl.status);
+            break;
+        }
+        if (pending_scan_duration_sec > 0) {
+            uint32_t duration_sec = pending_scan_duration_sec;
+            pending_scan_duration_sec = 0;
+            esp_err_t ret = esp_ble_gap_start_scanning(duration_sec);
+            if (ret != ESP_OK) {
+                ESP_LOGE(GATTS_TABLE_TAG, "scan start request failed: %s", esp_err_to_name(ret));
+            }
+        }
+        break;
+    case ESP_GAP_BLE_SCAN_START_COMPLETE_EVT:
+        if (param->scan_start_cmpl.status != ESP_BT_STATUS_SUCCESS) {
+            scan_active = false;
+            ESP_LOGE(GATTS_TABLE_TAG, "scan start failed, error status = %x", param->scan_start_cmpl.status);
+            break;
+        }
+        scan_active = true;
+        ESP_LOGI(GATTS_TABLE_TAG, "scan start success");
+        break;
+    case ESP_GAP_BLE_SCAN_STOP_COMPLETE_EVT:
+        scan_active = false;
+        if (param->scan_stop_cmpl.status != ESP_BT_STATUS_SUCCESS) {
+            ESP_LOGE(GATTS_TABLE_TAG, "scan stop failed, error status = %x", param->scan_stop_cmpl.status);
+            break;
+        }
+        ESP_LOGI(GATTS_TABLE_TAG, "scan stop success");
         break;
     case ESP_GAP_BLE_PASSKEY_REQ_EVT:                           /* passkey request event */
         ESP_LOGI(GATTS_TABLE_TAG, "ESP_GAP_BLE_PASSKEY_REQ_EVT");
@@ -1302,6 +1346,48 @@ bool ble_tx_ready(void)
     }
     return false;
 }
+
+esp_err_t ble_start_scan(uint32_t duration_sec)
+{
+    if (!dev_status_is_bit_set(DEV_BLE_ENABLED_BIT))
+    {
+        return ESP_ERR_INVALID_STATE;
+    }
+
+    if (duration_sec == 0)
+    {
+        duration_sec = 1;
+    }
+
+    pending_scan_duration_sec = duration_sec;
+    esp_err_t ret = esp_ble_gap_set_scan_params(&load_test_scan_params);
+    if (ret != ESP_OK)
+    {
+        pending_scan_duration_sec = 0;
+        ESP_LOGE(GATTS_TABLE_TAG, "scan params request failed: %s", esp_err_to_name(ret));
+    }
+
+    return ret;
+}
+
+esp_err_t ble_stop_scan(void)
+{
+    pending_scan_duration_sec = 0;
+    scan_active = false;
+
+    if (!dev_status_is_bit_set(DEV_BLE_ENABLED_BIT))
+    {
+        return ESP_ERR_INVALID_STATE;
+    }
+
+    return esp_ble_gap_stop_scanning();
+}
+
+bool ble_scan_active(void)
+{
+    return scan_active;
+}
+
 void ble_send(uint8_t* buf, uint8_t buf_len)
 {
     if(ble_tx_ready())

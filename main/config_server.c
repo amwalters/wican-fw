@@ -82,6 +82,7 @@
 #include "autopid.h"
 #include "wc_mdns.h"
 #include "elm327.h"
+#include "power_detection.h"
 #include "hw_config.h"
 #include "rtcm.h"
 #include "esp_littlefs.h"
@@ -1329,6 +1330,21 @@ static esp_err_t destinations_stats_handler(httpd_req_t *req)
 	return ESP_OK;
 }
 
+static esp_err_t load_test_status_handler(httpd_req_t *req)
+{
+	char *response_str = power_detection_get_load_test_status_json();
+	if (response_str)
+	{
+		httpd_resp_set_type(req, "application/json");
+		httpd_resp_send(req, response_str, HTTPD_RESP_USE_STRLEN);
+		free(response_str);
+		return ESP_OK;
+	}
+
+	httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to generate JSON");
+	return ESP_OK;
+}
+
 
 static esp_err_t system_reboot_handler(httpd_req_t *req)
 {
@@ -1399,6 +1415,18 @@ static esp_err_t system_commands_handler(httpd_req_t *req)
             else if (strcmp(cmd, "force_update_obd") == 0)
             {
                 elm327_update_obd(true);
+            }
+            else if (strcmp(cmd, "start_load_test") == 0)
+            {
+                esp_err_t load_test_ret = power_detection_start_load_test();
+                if (load_test_ret == ESP_ERR_INVALID_STATE)
+                {
+                    ESP_LOGW(TAG, "Load test already running");
+                }
+                else if (load_test_ret != ESP_OK)
+                {
+                    ESP_LOGE(TAG, "Failed to start load test: %s", esp_err_to_name(load_test_ret));
+                }
             }
             else if (strcmp(cmd, "set_rtc_time") == 0)
             {
@@ -2460,6 +2488,12 @@ static const httpd_uri_t destinations_stats_uri = {
 	.uri       = "/api/destinations_stats",
 	.method    = HTTP_GET,
 	.handler   = destinations_stats_handler,
+	.user_ctx  = NULL
+};
+static const httpd_uri_t load_test_status_uri = {
+	.uri       = "/api/load_test_status",
+	.method    = HTTP_GET,
+	.handler   = load_test_status_handler,
 	.user_ctx  = NULL
 };
 static const httpd_uri_t check_status_uri = {
@@ -3667,6 +3701,7 @@ static void register_server_uris(void)
 	httpd_register_uri_handler(server, &autopid_data);
 	httpd_register_uri_handler(server, &load_car_config_uri);
 	httpd_register_uri_handler(server, &destinations_stats_uri);
+	httpd_register_uri_handler(server, &load_test_status_uri);
 	httpd_register_uri_handler(server, &store_car_data_uri);
 	httpd_register_uri_handler(server, &system_commands);
 	httpd_register_uri_handler(server, &scan_available_pids_uri);
@@ -4485,4 +4520,3 @@ int8_t config_server_get_mqtt_include_timestamp(void) {
     }
     return 0;
 }
-

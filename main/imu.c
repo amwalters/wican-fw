@@ -37,6 +37,7 @@ static icm42670_t dev = {0};
 static QueueHandle_t imu_motion_evt_queue = NULL;
 static QueueHandle_t activity_state_queue = NULL;
 static uint8_t imu_wom_threshold = 8; // Default threshold value
+static volatile uint8_t imu_last_int_status2 = 0;
 // Static storage for imu_motion_evt_queue (length 10, item size uint32_t)
 static StaticQueue_t imu_motion_evt_queue_struct;
 static uint8_t imu_motion_evt_queue_storage[10 * sizeof(uint32_t)];
@@ -97,14 +98,31 @@ static void imu_motion_task(void *pvParameters)
         // Wait for WoM interrupt event
         if (xQueueReceive(imu_motion_evt_queue, &gpio_num, pdMS_TO_TICKS(100)))
         {
-            // Motion detected by WoM
-            wc_timer_set(&motion_timer, STATIONARY_TIME_MS);
-            
-            // If we were stationary, change to active
-            if (current_state == ACTIVITY_STATE_STATIONARY)
+            uint8_t status2 = 0;
+            ret = icm42670_read_int_status2(&dev, &status2);
+            if (ret != ESP_OK)
             {
-                current_state = ACTIVITY_STATE_ACTIVE;
-                ESP_LOGI(TAG, "State changed to ACTIVE");
+                ESP_LOGW(TAG, "Failed to read INT_STATUS2: %s", esp_err_to_name(ret));
+            }
+            else if (status2 & (ICM42670_SMD_INT_BITS | ICM42670_WOM_X_INT_BITS | ICM42670_WOM_Y_INT_BITS | ICM42670_WOM_Z_INT_BITS))
+            {
+                imu_last_int_status2 = status2;
+
+                // Motion detected by SMD/WoM
+                wc_timer_set(&motion_timer, STATIONARY_TIME_MS);
+
+                // If we were stationary, change to active
+                if (current_state == ACTIVITY_STATE_STATIONARY)
+                {
+                    current_state = ACTIVITY_STATE_ACTIVE;
+                    ESP_LOGI(TAG, "State changed to ACTIVE");
+                }
+            }
+            else
+            {
+                imu_last_int_status2 = status2;
+                ESP_LOGD(TAG, "Ignoring IMU interrupt without WoM status: gpio=%lu status2=0x%02x",
+                    (unsigned long)gpio_num, status2);
             }
         }
 
@@ -114,6 +132,7 @@ static void imu_motion_task(void *pvParameters)
             if (wc_timer_is_expired(&motion_timer))
             {
                 current_state = ACTIVITY_STATE_STATIONARY;
+                imu_last_int_status2 = 0;
                 ESP_LOGI(TAG, "State changed to STATIONARY");
             }
         }
@@ -144,6 +163,11 @@ activity_state_t imu_get_activity_state(void)
     }
 
     return state;
+}
+
+uint8_t imu_get_last_int_status2(void)
+{
+    return imu_last_int_status2;
 }
 
 //TODO: scl_gpio, scl_gpio amd int_gpio are not used
@@ -268,6 +292,7 @@ esp_err_t imu_config_wom(uint8_t threshold)
         .trigger = ICM42670_WOM_INT_DUR_FIRST,
         .logical_mode = ICM42670_WOM_INT_MODE_ALL_OR,
         .reference = ICM42670_WOM_MODE_REF_INITIAL,
+        //.reference = ICM42670_WOM_MODE_REF_LAST,
         .wom_x_threshold = threshold,
         .wom_y_threshold = threshold,
         .wom_z_threshold = threshold,

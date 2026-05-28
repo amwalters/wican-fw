@@ -50,6 +50,7 @@
 #include <time.h>
 #include "ha_webhooks.h"
 #include "autopid_config.h"
+#include "power_detection.h"
 #include "esp_heap_caps.h"
 #include "imu.h"
 #include "vehicle.h"
@@ -60,7 +61,6 @@
 #define TEMP_BUFFER_LENGTH 32
 #define ECU_CONNECTED_BIT BIT0
 #define AUTOPID_POLL_JITTER_MS 100
-#define AUTOPID_IMU_STATIONARY_HOLD_MS (5 * 60 * 1000)
 
 // Backoff tuning (milliseconds)
 // How many consecutive failures before enabling backoff.
@@ -96,8 +96,6 @@ static QueueHandle_t protocolnumberQueue = NULL;
 static char *autopid_config_json = NULL;
 static StaticTimer_t autopid_bit_set_timer_buffer;
 static TimerHandle_t autopid_bit_set_timer_handle = NULL;
-static bool autopid_motion_was_active = false;
-static wc_timer_t autopid_imu_stationary_hold_timer = 0;
 
 static const char* current_group_mqtt_topic = NULL;
 
@@ -148,21 +146,69 @@ static void autopid_add_motion_status_to_json(cJSON *root)
     float imu_x = 0.0f;
     float imu_y = 0.0f;
     float imu_z = 0.0f;
+    float battery_voltage = 0.0f;
+    uint8_t imu_status2 = 0;
+    char trigger[32] = {0};
 
     if (!root)
         return;
 
     const char *activity = autopid_imu_activity_state_str();
+    if (strcmp(activity, "active") == 0)
+    {
+        imu_status2 = imu_get_last_int_status2();
+    }
+
     cJSON_AddStringToObject(root, "imu_activity", activity);
     cJSON_AddBoolToObject(root, "imu_active", strcmp(activity, "active") == 0);
     cJSON_AddBoolToObject(root, "drive_mode", dev_status_is_drive_mode_enabled());
     cJSON_AddBoolToObject(root, "home_mode", dev_status_is_home_mode_enabled());
+    cJSON_AddNumberToObject(root, "imu_int_status2", imu_status2);
+    cJSON_AddBoolToObject(root, "imu_trigger_smd", (imu_status2 & ICM42670_SMD_INT_BITS) != 0);
+    cJSON_AddBoolToObject(root, "imu_trigger_x", (imu_status2 & ICM42670_WOM_X_INT_BITS) != 0);
+    cJSON_AddBoolToObject(root, "imu_trigger_y", (imu_status2 & ICM42670_WOM_Y_INT_BITS) != 0);
+    cJSON_AddBoolToObject(root, "imu_trigger_z", (imu_status2 & ICM42670_WOM_Z_INT_BITS) != 0);
+    cJSON_AddBoolToObject(root, "power_load_test_active", power_detection_load_test_is_active());
+
+    if (imu_status2 & ICM42670_SMD_INT_BITS)
+        strlcat(trigger, "smd", sizeof(trigger));
+    if (imu_status2 & ICM42670_WOM_X_INT_BITS)
+        strlcat(trigger, trigger[0] ? ",x" : "x", sizeof(trigger));
+    if (imu_status2 & ICM42670_WOM_Y_INT_BITS)
+        strlcat(trigger, trigger[0] ? ",y" : "y", sizeof(trigger));
+    if (imu_status2 & ICM42670_WOM_Z_INT_BITS)
+        strlcat(trigger, trigger[0] ? ",z" : "z", sizeof(trigger));
+    cJSON_AddStringToObject(root, "imu_trigger", trigger[0] ? trigger : "none");
 
     if (imu_read_accel(&imu_x, &imu_y, &imu_z) == ESP_OK)
     {
         cJSON_AddNumberToObject(root, "imu_accel_x", imu_x);
         cJSON_AddNumberToObject(root, "imu_accel_y", imu_y);
         cJSON_AddNumberToObject(root, "imu_accel_z", imu_z);
+    }
+
+    if (sleep_mode_get_voltage(&battery_voltage) == ESP_OK)
+    {
+        cJSON_AddNumberToObject(root, "battery_voltage", battery_voltage);
+    }
+}
+
+static void autopid_add_pid_polling_status_to_json(cJSON *root)
+{
+    if (!root)
+        return;
+
+    power_detection_pid_polling_state_t state = power_detection_get_pid_polling_state();
+
+    cJSON_AddBoolToObject(root, "pid_polling_paused", state.paused);
+    cJSON_AddStringToObject(root, "pause_reason",
+        state.reason
+            ? state.reason
+            : "none");
+
+    if (!isnan(state.voltage))
+    {
+        cJSON_AddNumberToObject(root, "pause_voltage", state.voltage);
     }
 }
 
@@ -187,30 +233,6 @@ static bool is_engine_running(void) {
             cJSON_Delete(root);
         }
         free(rpm_json);
-    }
-    return running;
-}
-
-// --- HELPER: Check for 12v supply ---
-static bool is_ready_mode(void) {
-    char *ready_json = autopid_get_value_by_name("DCDC Input Voltage");
-    //if (!rpm_json) rpm_json = autopid_get_value_by_name("Engine RPM"); 
-
-    bool running = false;
-    if (ready_json) {
-        cJSON *root = cJSON_Parse(ready_json);
-        if (root) {
-            cJSON *child = root->child;
-            while(child) {
-                if (cJSON_IsNumber(child)) {
-                    // DCDC Power Supply should be 300-400V when supplying power to the 12 system
-                    if (child->valuedouble > 100.0) running = true;
-                }
-                child = child->next;
-            }
-            cJSON_Delete(root);
-        }
-        free(ready_json);
     }
     return running;
 }
@@ -781,8 +803,6 @@ static void autopid_data_update(autopid_config_t *pids)
         cJSON *root = cJSON_CreateObject();
         if (root)
         {
-            autopid_add_motion_status_to_json(root);
-
             // 1. PIDs (Group-Aware Logic)
             if (pids->use_groups) {
                 for (uint32_t g = 0; g < pids->group_count; g++) {
@@ -1364,20 +1384,43 @@ void autopid_publish_all_destinations(bool is_event_trigger)
         return;
     }
 
-    // Inject timestamp into snapshot JSON (only if enabled!)
-    if (config_server_get_mqtt_include_timestamp() == 1)
+    cJSON *payload_root = cJSON_Parse(raw_json);
+    if (payload_root)
     {
-        cJSON *ts_root = cJSON_Parse(raw_json);
-        if (ts_root)
+        cJSON_DeleteItemFromObject(payload_root, "imu_activity");
+        cJSON_DeleteItemFromObject(payload_root, "imu_active");
+        cJSON_DeleteItemFromObject(payload_root, "drive_mode");
+        cJSON_DeleteItemFromObject(payload_root, "home_mode");
+        cJSON_DeleteItemFromObject(payload_root, "imu_int_status2");
+        cJSON_DeleteItemFromObject(payload_root, "imu_trigger");
+        cJSON_DeleteItemFromObject(payload_root, "imu_trigger_smd");
+        cJSON_DeleteItemFromObject(payload_root, "imu_trigger_x");
+        cJSON_DeleteItemFromObject(payload_root, "imu_trigger_y");
+        cJSON_DeleteItemFromObject(payload_root, "imu_trigger_z");
+        cJSON_DeleteItemFromObject(payload_root, "power_load_test_active");
+        cJSON_DeleteItemFromObject(payload_root, "imu_accel_x");
+        cJSON_DeleteItemFromObject(payload_root, "imu_accel_y");
+        cJSON_DeleteItemFromObject(payload_root, "imu_accel_z");
+        cJSON_DeleteItemFromObject(payload_root, "battery_voltage");
+        cJSON_DeleteItemFromObject(payload_root, "pid_polling_paused");
+        cJSON_DeleteItemFromObject(payload_root, "pause_reason");
+        cJSON_DeleteItemFromObject(payload_root, "pause_voltage");
+        cJSON_DeleteItemFromObject(payload_root, "timestamp");
+
+        autopid_add_motion_status_to_json(payload_root);
+        autopid_add_pid_polling_status_to_json(payload_root);
+
+        if (config_server_get_mqtt_include_timestamp() == 1)
         {
-            cJSON_AddNumberToObject(ts_root, "timestamp", (double)time(NULL));
-            char *new_json = cJSON_PrintUnformatted(ts_root);
-            cJSON_Delete(ts_root);
-            
-            if (new_json) {
-                free(raw_json);
-                raw_json = new_json;
-            }
+            cJSON_AddNumberToObject(payload_root, "timestamp", (double)time(NULL));
+        }
+
+        char *new_json = cJSON_PrintUnformatted(payload_root);
+        cJSON_Delete(payload_root);
+
+        if (new_json) {
+            free(raw_json);
+            raw_json = new_json;
         }
     }
 
@@ -3424,85 +3467,9 @@ static void execute_pid(pid_data_t *curr_pid, bool check_timers) {
     }
 }
 
-			     
 static bool autopid_should_pause_pid_polling(float *out_voltage, const char **out_reason)
 {
-    if (out_voltage)
-        *out_voltage = NAN;
-    if (out_reason)
-        *out_reason = NULL;
-
-    if (!autopid_config)
-        return false;
-
-    if (is_ready_mode())
-    {
-    //    if (out_reason)
-    //        *out_reason = "ready_mode";
-        return false;
-    }
-
-    if (autopid_config->imu_voltage_override_enabled)
-    {
-        vehicle_motion_state_t motion_state = vehicle_motion_state();
-        //vehicle_motion_state_t motion_state = VEHICLE_MOTION_ACTIVE;
-        if (motion_state == VEHICLE_MOTION_ACTIVE)
-        {
-//            autopid_motion_was_active = true;
-//            if (out_reason)
-//                *out_reason = "imu_active";
-            return false;
-        }
-
-//        if (autopid_motion_was_active)
-//        {
-//            autopid_motion_was_active = false;
-//            wc_timer_set(&autopid_imu_stationary_hold_timer, AUTOPID_IMU_STATIONARY_HOLD_MS);
-//            ESP_LOGI(TAG, "IMU became stationary, allowing PID polling for %d seconds",
-//                     AUTOPID_IMU_STATIONARY_HOLD_MS / 1000);
-//        }
-
-//        if (autopid_imu_stationary_hold_timer != 0 &&
-//            !wc_timer_is_expired(&autopid_imu_stationary_hold_timer))
-//        {
-//            if (out_reason)
-//                *out_reason = "imu_stationary_hold";
-//            return false;
-//        }
-//    }
-//    else
-//    {
-//        autopid_motion_was_active = false;
-//        autopid_imu_stationary_hold_timer = 0;
-    }
-
-    // Mode: disable PID requests when below Power Saving -> Sleep Voltage threshold.
-    // Uses dev_status voltage bit (set by sleep_mode task).
-    if (autopid_config->disable_pid_requests_on_sleep_voltage && !dev_status_is_wake_voltage_ok())
-    {
-        if (out_reason)
-            *out_reason = "sleep_voltage";
-        return true;
-    }
-
-    // Mode: disable PID requests when below a custom Automate threshold.
-    if (autopid_config->disable_pid_requests_on_automate_threshold)
-    {
-        float v = 0.0f;
-        if (sleep_mode_get_voltage(&v) == ESP_OK)
-        {
-            if (out_voltage)
-                *out_voltage = v;
-            if (v < autopid_config->pid_polling_min_voltage)
-            {
-                if (out_reason)
-                    *out_reason = "automate_threshold";
-                return true;
-            }
-        }
-    }
-
-    return false;
+    return power_detection_should_pause_pid_polling(autopid_config, out_voltage, out_reason);
 }
 
 static bool all_parameters_failed(autopid_config_t *autopid_config)
@@ -4336,7 +4303,9 @@ static void autopid_task(void *pvParameters)
             obd_logger_enable();
         }
 
-        if (autopid_config->disable_on_sleep_voltage && !dev_status_is_wake_voltage_ok()) {
+        if (autopid_config->disable_on_sleep_voltage &&
+            !dev_status_is_wake_voltage_ok() &&
+            !dev_status_is_autopid_wake_bypass_low_voltage()) {
             ESP_LOGI(TAG, "Voltage below sleep threshold, pausing autopid until voltage recovers");
             obd_logger_disable();
             dev_status_set_bits(DEV_AUTOPID_IDLE_BIT);
@@ -4362,6 +4331,7 @@ static void autopid_task(void *pvParameters)
         float batt_v = NAN;
         const char *pause_reason = NULL;
         bool pid_polling_paused = autopid_should_pause_pid_polling(&batt_v, &pause_reason);
+
         if (pid_polling_paused != pid_polling_paused_prev)
         {
             if (pid_polling_paused)
@@ -4386,7 +4356,13 @@ static void autopid_task(void *pvParameters)
                 previous_pid_type = PID_MAX;
                 // not used current_active_init = NULL;
             }
+
             pid_polling_paused_prev = pid_polling_paused;
+
+            if (autopid_processing_task_handle != NULL)
+            {
+                xTaskNotifyGive(autopid_processing_task_handle);
+            }
         }
 
         // elm327_lock();
@@ -4411,11 +4387,15 @@ static void autopid_task(void *pvParameters)
                     int64_t now_ms = esp_timer_get_time() / 1000;
 
                     if (group->detection_method == DETECTION_VOLTAGE) {
-                        float v = 0;
-                        if (sleep_mode_get_voltage(&v) == ESP_OK) {
-                            active = (v >= group->wake_voltage);
+                        if (dev_status_is_autopid_wake_bypass_low_voltage()) {
+                            active = true;
                         } else {
-                            active = false;
+                            float v = 0;
+                            if (sleep_mode_get_voltage(&v) == ESP_OK) {
+                                active = (v >= group->wake_voltage);
+                            } else {
+                                active = false;
+                            }
                         }
                     } else if (group->detection_method == DETECTION_ADAPTIVE_RPM) {
                         active = is_engine_running();	
@@ -4505,8 +4485,6 @@ static void autopid_task(void *pvParameters)
 		    
                     if (!run_batch) continue;
 
-		    pids_polled = true;
-
                     if (group->init && strlen(group->init) > 0) {
                         /* RESTORED: Simple init send without flush loops */
                         send_commands(group->init, 5);
@@ -4526,7 +4504,8 @@ static void autopid_task(void *pvParameters)
                             }
                         }
                         
-if (any_param_enabled) {
+                        if (any_param_enabled) {
+                            pids_polled = true;
                             // Call our new unified function! (false = Groups use group timers, ignore param timers)
                             execute_pid(curr_pid, false);
                         }
@@ -4678,8 +4657,14 @@ if (any_param_enabled) {
             xSemaphoreGive(autopid_config->mutex);
 
             /* [NEW] Signal processing task ONLY if PIDs were actually polled */
-            if (pids_polled && autopid_processing_task_handle != NULL) {
-                xTaskNotifyGive(autopid_processing_task_handle);
+            if (pids_polled) {
+                if (dev_status_is_autopid_wake_bypass_low_voltage()) {
+                    ESP_LOGI(TAG, "Clearing one-shot AutoPID low-voltage wake bypass after first poll");
+                    dev_status_clear_autopid_wake_bypass_low_voltage();
+                }
+                if (autopid_processing_task_handle != NULL) {
+                    xTaskNotifyGive(autopid_processing_task_handle);
+                }
             }	
         }
 

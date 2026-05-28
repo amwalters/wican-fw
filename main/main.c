@@ -124,6 +124,28 @@ static bool debug_logs_network_ready_sta(void)
 	return dev_status_is_sta_connected();
 }
 
+static void apply_autopid_wakeup_bypass_if_needed(void)
+{
+	restart_tracker_record_t latest_record;
+
+	if (restart_tracker_get_latest_record(&latest_record) != ESP_OK)
+	{
+		dev_status_clear_autopid_wake_bypass_low_voltage();
+		return;
+	}
+
+	if (latest_record.was_planned &&
+		latest_record.planned_reason == RESTART_TRACKER_PLANNED_REASON_POWER_WAKE &&
+		latest_record.source == RESTART_TRACKER_SOURCE_SLEEP_MODE)
+	{
+		ESP_LOGI(TAG, "Enabling one-shot AutoPID low-voltage bypass after sleep wake");
+		dev_status_set_autopid_wake_bypass_low_voltage();
+		return;
+	}
+
+	dev_status_clear_autopid_wake_bypass_low_voltage();
+}
+
 static void log_can_to_mqtt(twai_message_t *frame, uint8_t type)
 {
 	static mqtt_can_message_t mqtt_msg;
@@ -857,6 +879,15 @@ void app_main(void)
 		}
 	}
 
+	if (protocol == AUTO_PID)
+	{
+		apply_autopid_wakeup_bypass_if_needed();
+	}
+	else
+	{
+		dev_status_clear_autopid_wake_bypass_low_voltage();
+	}
+
 	if(protocol == REALDASH)
 	{
 //		int can_datarate = config_server_get_can_rate();
@@ -1185,4 +1216,3 @@ void app_main(void)
 
 	cmdline_init();
 }
-

@@ -4311,6 +4311,112 @@ function send_system_command(command) {
     xhttp.send(JSON.stringify(data, null, 0));
 }
 
+let loadTestPollTimer = null;
+
+function formatLoadTestLabel(label) {
+    if (label === "baseline") {
+        return "Baseline";
+    }
+    if (label && label.startsWith("load_")) {
+        return "Load " + label.substring(5);
+    }
+    if (label && label.startsWith("post_")) {
+        return "Post " + label.substring(5);
+    }
+    return label || "Window";
+}
+
+function setLoadTestButtonRunning(running) {
+    const button = document.getElementById("start_load_test_button");
+    if (!button) {
+        return;
+    }
+    button.disabled = running;
+    button.value = running ? "Load Test Running" : "Start Load Test";
+}
+
+function renderLoadTestStatus(status) {
+    const results = document.getElementById("load_test_results");
+    if (!results) {
+        return;
+    }
+
+    const windows = Array.isArray(status.windows) ? status.windows : [];
+    const rows = windows.map(window => {
+        const sampleText = window.sample_count === 1 ? "sample" : "samples";
+        return `<div><strong>${formatLoadTestLabel(window.label)}:</strong> avg median raw ${window.avg_median_raw} (${window.sample_count} ${sampleText})</div>`;
+    });
+
+    if (status.last_adc) {
+        rows.push(`<div><strong>Last:</strong> ${(status.last_adc.battery_mv / 1000).toFixed(2)} V, median raw ${status.last_adc.median_raw}</div>`);
+    }
+
+    if (rows.length === 0) {
+        results.textContent = status.active ? "Collecting baseline..." : "";
+        return;
+    }
+
+    results.innerHTML = rows.join("");
+}
+
+function pollLoadTestStatus() {
+    if (loadTestPollTimer) {
+        clearTimeout(loadTestPollTimer);
+        loadTestPollTimer = null;
+    }
+
+    fetch('/api/load_test_status', { cache: 'no-store' })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(status => {
+            renderLoadTestStatus(status);
+            setLoadTestButtonRunning(status.active);
+            if (status.active) {
+                loadTestPollTimer = setTimeout(pollLoadTestStatus, 2000);
+            }
+        })
+        .catch(error => {
+            showNotification("Unable to read load test status: " + error.message, "red");
+            setLoadTestButtonRunning(false);
+        });
+}
+
+function startLoadTest() {
+    const button = document.getElementById("start_load_test_button");
+    if (button) {
+        button.disabled = true;
+        button.value = "Starting...";
+    }
+
+    fetch('/system_commands', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ command: "start_load_test" }, null, 0)
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        showNotification("Load test started.", "green", 5000);
+        const results = document.getElementById("load_test_results");
+        if (results) {
+            results.textContent = "Collecting baseline...";
+        }
+        setLoadTestButtonRunning(true);
+        pollLoadTestStatus();
+    })
+    .catch(error => {
+        showNotification("Unable to start load test: " + error.message, "red");
+        setLoadTestButtonRunning(false);
+    });
+}
+
 async function downloadCfg() {
     const endpoints = [
         '/load_config',

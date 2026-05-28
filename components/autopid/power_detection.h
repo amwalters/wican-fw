@@ -18,26 +18,27 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __BLE_H__
-#define __BLE_H__
+#ifndef __POWER_DETECTION_H__
+#define __POWER_DETECTION_H__
 
 #include <stdbool.h>
-#include <stdint.h>
 #include "esp_err.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
+#include "freertos/semphr.h"
+#include "autopid.h"
 
-void ble_init(QueueHandle_t *xTXp_Queue, QueueHandle_t *xRXp_Queue, uint8_t connected_led, int passkey, uint8_t* uid);
-bool ble_connected(void);
-void ble_send(uint8_t* buf, uint8_t buf_len);
-bool ble_tx_ready(void);
-void ble_disable(void);
-void ble_enable(void);
-esp_err_t ble_start_scan(uint32_t duration_sec);
-esp_err_t ble_stop_scan(void);
-bool ble_scan_active(void);
-// Runtime control of pairing/bonding availability
-void ble_pairing_enable(void);
-void ble_pairing_disable(void);
-bool ble_pairing_is_enabled(void);
-#endif
+typedef struct
+{
+    bool paused;
+    const char *reason;
+    float voltage;
+} power_detection_pid_polling_state_t;
+
+bool power_detection_should_pause_pid_polling(const autopid_config_t *config, float *out_voltage, const char **out_reason);
+power_detection_pid_polling_state_t power_detection_get_pid_polling_state(void);
+esp_err_t power_detection_start_load_test(void);
+bool power_detection_load_test_is_active(void);
+char *power_detection_get_load_test_status_json(void);
+
+#endif // __POWER_DETECTION_H__

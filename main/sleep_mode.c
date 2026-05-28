@@ -792,18 +792,21 @@ static void update_battery_voltage(float *new_volt)
     }
 }
 
-esp_err_t read_ss_adc_voltage(float *voltage_out)
+esp_err_t read_ss_adc_voltage(adc_stats_t *stats)
 {
-    if (voltage_out == NULL) {
+    if (stats == NULL) {
         return ESP_ERR_INVALID_ARG;
     }
 
     const int NUM_SAMPLES = 8; // Similar to conv_frame_size in continuous version
+    int raw_samples[NUM_SAMPLES];
     uint32_t sum_raw = 0;
     uint32_t valid_samples = 0;
     uint32_t min_raw = UINT32_MAX;
     uint32_t max_raw = 0;
     int sum_voltage = 0;
+
+    memset(stats, 0, sizeof(*stats));
 
     // Take multiple readings
     for (int i = 0; i < NUM_SAMPLES; i++)
@@ -827,6 +830,7 @@ esp_err_t read_ss_adc_voltage(float *voltage_out)
             
             if(ret == ESP_OK)
             {
+                raw_samples[valid_samples] = raw_value;
                 sum_raw += raw_value;
                 sum_voltage += voltage;
                 valid_samples++;
@@ -858,20 +862,55 @@ esp_err_t read_ss_adc_voltage(float *voltage_out)
     if (valid_samples > 0) 
     {
         int avg_raw = sum_raw / valid_samples;
-        float avg_voltage = (float)sum_voltage / valid_samples;
+        int avg_adc_mv = sum_voltage / valid_samples;
+        int sorted_raw[NUM_SAMPLES];
+
+        for (uint32_t i = 0; i < valid_samples; i++)
+        {
+            sorted_raw[i] = raw_samples[i];
+        }
+
+        for (uint32_t i = 1; i < valid_samples; i++)
+        {
+            int value = sorted_raw[i];
+            uint32_t j = i;
+            while (j > 0 && sorted_raw[j - 1] > value)
+            {
+                sorted_raw[j] = sorted_raw[j - 1];
+                j--;
+            }
+            sorted_raw[j] = value;
+        }
+
+        int median_raw;
+        if ((valid_samples % 2) == 0)
+        {
+            median_raw = (sorted_raw[(valid_samples / 2) - 1] + sorted_raw[valid_samples / 2]) / 2;
+        }
+        else
+        {
+            median_raw = sorted_raw[valid_samples / 2];
+        }
         
         #ifdef HV_PRO_V140
-        float volt_rounded = ((float)avg_voltage * 7.25f) / 1000;
+        int battery_mv = ((avg_adc_mv * 725) + 50) / 100;
         #else
-        float volt_rounded = ((float)avg_voltage * 11) / 1000;
-        volt_rounded+=0.1f;  // Adjust for calibration offset
+        int battery_mv = (avg_adc_mv * 11) + 100;  // Adjust for calibration offset
         #endif
         
-        volt_rounded = roundf(volt_rounded * 10.0f) / 10.0f;
-        *voltage_out = volt_rounded;
+        battery_mv = ((battery_mv + 5) / 10) * 10;
+        stats->avg_raw = avg_raw;
+        stats->median_raw = median_raw;
+        stats->min_raw = min_raw;
+        stats->max_raw = max_raw;
+        stats->avg_adc_mv = avg_adc_mv;
+        stats->battery_mv = battery_mv;
+        stats->valid_samples = valid_samples;
         
-        ESP_LOGI(TAG, "Summary: Raw=%d (min=%lu, max=%lu, avg of %lu), Voltage=%.2f V [%s]", 
-                 avg_raw, min_raw, max_raw, valid_samples, *voltage_out,
+        ESP_LOGI(TAG, "Summary: Raw=%d median=%d (min=%d, max=%d, avg of %lu), ADC=%dmV, Battery=%.2f V [%s]",
+                 stats->avg_raw, stats->median_raw, stats->min_raw, stats->max_raw,
+                 (unsigned long)stats->valid_samples, stats->avg_adc_mv,
+                 (float)stats->battery_mv / 1000.0f,
                  do_calibration ? "CALIBRATED" : "UNCALIBRATED");
                  
         return ESP_OK;
@@ -1010,10 +1049,12 @@ void light_sleep_task(void *pvParameters)
 		{
             // ret = sleep_mode_get_voltage(&battery_voltage);
             // ret = read_adc_voltage(&battery_voltage);
-            ret = read_ss_adc_voltage(&battery_voltage);
+            adc_stats_t adc_stats = {0};
+            ret = read_ss_adc_voltage(&adc_stats);
             wc_timer_set(&voltage_read_timer, 3000);
             if(ret == ESP_OK)
             {
+                battery_voltage = (float)adc_stats.battery_mv / 1000.0f;
                 update_battery_voltage(&battery_voltage);
                 if (battery_voltage < sleep_voltage)
                 {

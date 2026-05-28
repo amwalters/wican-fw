@@ -20,5 +20,6 @@ esp_err_t imu_get_device_id(uint8_t *id);
 esp_err_t imu_set_accel_fsr(icm42670_accel_fsr_t fsr);
 esp_err_t imu_set_gyro_fsr(icm42670_gyro_fsr_t fsr);
 activity_state_t imu_get_activity_state(void);
+uint8_t imu_get_last_int_status2(void);
 
 #endif
