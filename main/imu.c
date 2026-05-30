@@ -290,7 +290,8 @@ esp_err_t imu_config_wom(uint8_t threshold)
 
     const icm42670_wom_config_t wom_config = {
         .trigger = ICM42670_WOM_INT_DUR_FIRST,
-        .logical_mode = ICM42670_WOM_INT_MODE_ALL_OR,
+        //.logical_mode = ICM42670_WOM_INT_MODE_ALL_OR,
+        .logical_mode = ICM42670_WOM_INT_MODE_ALL_AND,
         .reference = ICM42670_WOM_MODE_REF_INITIAL,
         //.reference = ICM42670_WOM_MODE_REF_LAST,
         .wom_x_threshold = threshold,

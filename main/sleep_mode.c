@@ -792,78 +792,48 @@ static void update_battery_voltage(float *new_volt)
     }
 }
 
-esp_err_t read_ss_adc_voltage(adc_stats_t *stats)
+esp_err_t read_ss_adc_raw_stats(adc_stats_t *stats, uint32_t sample_count)
 {
     if (stats == NULL) {
         return ESP_ERR_INVALID_ARG;
     }
 
-    const int NUM_SAMPLES = 8; // Similar to conv_frame_size in continuous version
-    int raw_samples[NUM_SAMPLES];
+    if (sample_count == 0 || sample_count > 128) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    int raw_samples[128];
     uint32_t sum_raw = 0;
     uint32_t valid_samples = 0;
     uint32_t min_raw = UINT32_MAX;
     uint32_t max_raw = 0;
-    int sum_voltage = 0;
 
     memset(stats, 0, sizeof(*stats));
 
-    // Take multiple readings
-    for (int i = 0; i < NUM_SAMPLES; i++)
+    for (uint32_t i = 0; i < sample_count; i++)
     {
         int raw_value;
         esp_err_t ret = adc_oneshot_read(adc_handle, ADC_CHANNEL_3, &raw_value);
-        
+
         if (ret == ESP_OK && raw_value < 4096)
         {
-            int voltage = 0;
-            
-            // Convert raw to voltage using calibration
-            if (do_calibration)
-            {
-                ret = adc_cali_raw_to_voltage(cali_handle, raw_value, &voltage);
-            } 
-            else
-            {
-                voltage = (raw_value * 3300) / 4095;
-            }
-            
-            if(ret == ESP_OK)
-            {
-                raw_samples[valid_samples] = raw_value;
-                sum_raw += raw_value;
-                sum_voltage += voltage;
-                valid_samples++;
-                
-                if (raw_value < min_raw) min_raw = raw_value;
-                if (raw_value > max_raw) max_raw = raw_value;
-                
-                // Print first few samples for debugging
-                // if (valid_samples <= 5) 
-                // {
-                //     ESP_LOGI(TAG, "Sample[%d]: Chan=%d, Raw=%d, Voltage=%dmV", 
-                //             (int)valid_samples, ADC_CHANNEL_3, raw_value, voltage);
-                // }
-            }
-            else
-            {
-                ESP_LOGE(TAG, "ADC adc_cali_raw_to_voltage error: %d", ret);
-            }
-            // Small delay between readings
-            // vTaskDelay(pdMS_TO_TICKS(1));
+            raw_samples[valid_samples] = raw_value;
+            sum_raw += raw_value;
+            valid_samples++;
+
+            if (raw_value < min_raw) min_raw = raw_value;
+            if (raw_value > max_raw) max_raw = raw_value;
         }
         else
         {
-            ESP_LOGE(TAG, "ADC read error: %d", ret);
+            ESP_LOGW(TAG, "ADC raw read error: %d", ret);
         }
     }
 
-    // Calculate averages
-    if (valid_samples > 0) 
+    if (valid_samples > 0)
     {
         int avg_raw = sum_raw / valid_samples;
-        int avg_adc_mv = sum_voltage / valid_samples;
-        int sorted_raw[NUM_SAMPLES];
+        int sorted_raw[128];
 
         for (uint32_t i = 0; i < valid_samples; i++)
         {
@@ -891,13 +861,14 @@ esp_err_t read_ss_adc_voltage(adc_stats_t *stats)
         {
             median_raw = sorted_raw[valid_samples / 2];
         }
-        
-        #ifdef HV_PRO_V140
+
+        int avg_adc_mv = (avg_raw * 3300) / 4095;
+#ifdef HV_PRO_V140
         int battery_mv = ((avg_adc_mv * 725) + 50) / 100;
-        #else
+#else
         int battery_mv = (avg_adc_mv * 11) + 100;  // Adjust for calibration offset
-        #endif
-        
+#endif
+
         battery_mv = ((battery_mv + 5) / 10) * 10;
         stats->avg_raw = avg_raw;
         stats->median_raw = median_raw;
@@ -906,16 +877,103 @@ esp_err_t read_ss_adc_voltage(adc_stats_t *stats)
         stats->avg_adc_mv = avg_adc_mv;
         stats->battery_mv = battery_mv;
         stats->valid_samples = valid_samples;
-        
-        ESP_LOGI(TAG, "Summary: Raw=%d median=%d (min=%d, max=%d, avg of %lu), ADC=%dmV, Battery=%.2f V [%s]",
+
+        ESP_LOGI(TAG, "Raw summary: Raw=%d median=%d (min=%d, max=%d, avg of %lu), ADC=%dmV, Battery=%.2f V [UNCALIBRATED]",
                  stats->avg_raw, stats->median_raw, stats->min_raw, stats->max_raw,
                  (unsigned long)stats->valid_samples, stats->avg_adc_mv,
-                 (float)stats->battery_mv / 1000.0f,
-                 do_calibration ? "CALIBRATED" : "UNCALIBRATED");
-                 
+                 (float)stats->battery_mv / 1000.0f);
+
         return ESP_OK;
     }
-    
+
+    return ESP_ERR_INVALID_STATE;  // No valid samples
+}
+
+esp_err_t read_ss_adc_voltage(float *voltage_out)
+{
+    if (voltage_out == NULL) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    const int NUM_SAMPLES = 8; // Similar to conv_frame_size in continuous version
+    uint32_t sum_raw = 0;
+    uint32_t valid_samples = 0;
+    uint32_t min_raw = UINT32_MAX;
+    uint32_t max_raw = 0;
+    int sum_voltage = 0;
+
+    // Take multiple readings
+    for (int i = 0; i < NUM_SAMPLES; i++)
+    {
+        int raw_value;
+        esp_err_t ret = adc_oneshot_read(adc_handle, ADC_CHANNEL_3, &raw_value);
+
+        if (ret == ESP_OK && raw_value < 4096)
+        {
+            int voltage = 0;
+
+            // Convert raw to voltage using calibration
+            if (do_calibration)
+            {
+                ret = adc_cali_raw_to_voltage(cali_handle, raw_value, &voltage);
+            }
+            else
+            {
+                voltage = (raw_value * 3300) / 4095;
+            }
+
+            if(ret == ESP_OK)
+            {
+                sum_raw += raw_value;
+                sum_voltage += voltage;
+                valid_samples++;
+
+                if (raw_value < min_raw) min_raw = raw_value;
+                if (raw_value > max_raw) max_raw = raw_value;
+
+                // Print first few samples for debugging
+                // if (valid_samples <= 5)
+                // {
+                //     ESP_LOGI(TAG, "Sample[%d]: Chan=%d, Raw=%d, Voltage=%dmV",
+                //             (int)valid_samples, ADC_CHANNEL_3, raw_value, voltage);
+                // }
+            }
+            else
+            {
+                ESP_LOGE(TAG, "ADC adc_cali_raw_to_voltage error: %d", ret);
+            }
+            // Small delay between readings
+            // vTaskDelay(pdMS_TO_TICKS(1));
+        }
+        else
+        {
+            ESP_LOGE(TAG, "ADC read error: %d", ret);
+        }
+    }
+
+    // Calculate averages
+    if (valid_samples > 0)
+    {
+        int avg_raw = sum_raw / valid_samples;
+        float avg_voltage = (float)sum_voltage / valid_samples;
+
+#ifdef HV_PRO_V140
+        float volt_rounded = ((float)avg_voltage * 7.25f) / 1000;
+#else
+        float volt_rounded = ((float)avg_voltage * 11) / 1000;
+        volt_rounded+=0.1f;  // Adjust for calibration offset
+#endif
+
+        volt_rounded = roundf(volt_rounded * 100.0f) / 100.0f;
+        *voltage_out = volt_rounded;
+
+        ESP_LOGI(TAG, "Summary: Raw=%d (min=%lu, max=%lu, avg of %lu), Voltage=%.2f V [%s]",
+                 avg_raw, min_raw, max_raw, valid_samples, *voltage_out,
+                 do_calibration ? "CALIBRATED" : "UNCALIBRATED");
+
+        return ESP_OK;
+    }
+
     return ESP_ERR_INVALID_STATE;  // No valid samples
 }
 
@@ -1049,12 +1107,10 @@ void light_sleep_task(void *pvParameters)
 		{
             // ret = sleep_mode_get_voltage(&battery_voltage);
             // ret = read_adc_voltage(&battery_voltage);
-            adc_stats_t adc_stats = {0};
-            ret = read_ss_adc_voltage(&adc_stats);
+            ret = read_ss_adc_voltage(&battery_voltage);
             wc_timer_set(&voltage_read_timer, 3000);
             if(ret == ESP_OK)
             {
-                battery_voltage = (float)adc_stats.battery_mv / 1000.0f;
                 update_battery_voltage(&battery_voltage);
                 if (battery_voltage < sleep_voltage)
                 {
@@ -1104,7 +1160,8 @@ void light_sleep_task(void *pvParameters)
                         can_disable();
                         vpn_manager_stop();
                         wc_mdns_deinit();
-                        wifi_mgr_deinit();
+                        //wifi_mgr_deinit();
+                        wifi_mgr_disable();
                         ble_disable();
                         led_set_level(0,0,0);
                         // Update immediately to prevenet elm327 wakeup 

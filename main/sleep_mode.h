@@ -58,7 +58,8 @@ typedef struct {
 } sleep_state_info_t;
 
 void sleep_mode_init(void);
-esp_err_t read_ss_adc_voltage(adc_stats_t *stats);
+esp_err_t read_ss_adc_voltage(float *voltage_out);
+esp_err_t read_ss_adc_raw_stats(adc_stats_t *stats, uint32_t sample_count);
 esp_err_t sleep_mode_get_voltage(float *val);
 esp_err_t sleep_mode_get_state(sleep_state_info_t *state_info);
 void sleep_mode_print_wakeup_reason(void);
