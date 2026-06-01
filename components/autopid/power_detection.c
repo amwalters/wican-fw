@@ -59,7 +59,22 @@
     (1 + POWER_DETECTION_LOAD_TEST_LOAD_WINDOW_COUNT + POWER_DETECTION_LOAD_TEST_POST_WINDOW_COUNT)
 #define POWER_DETECTION_LOAD_TEST_LABEL_LEN 16
 #define POWER_DETECTION_LOAD_TEST_ADC_SAMPLES 20
+#define POWER_DETECTION_VOLTAGE_RISE_DELTA_V 0.20f
+#define POWER_DETECTION_VOLTAGE_RISE_SAMPLE_INTERVAL_MS (2 * 1000)
+#define POWER_DETECTION_VOLTAGE_RISE_CURRENT_MIN_AGE_MS 0
+#define POWER_DETECTION_VOLTAGE_RISE_CURRENT_MAX_AGE_MS (10 * 1000)
+#define POWER_DETECTION_VOLTAGE_RISE_BASELINE_MIN_AGE_MS (20 * 1000)
+#define POWER_DETECTION_VOLTAGE_RISE_BASELINE_MAX_AGE_MS (30 * 1000)
+#define POWER_DETECTION_VOLTAGE_RISE_HOLD_MS (60 * 1000)
+#define POWER_DETECTION_VOLTAGE_RISE_MIN_SAMPLES 3
+#define POWER_DETECTION_VOLTAGE_HISTORY_SIZE 32
 #define LOAD_PACKET_SIZE 1024
+
+typedef struct
+{
+    int64_t timestamp_ms;
+    float voltage;
+} voltage_history_sample_t;
 
 typedef struct
 {
@@ -89,6 +104,11 @@ static StackType_t load_test_task_stack[POWER_DETECTION_LOAD_TEST_STACK_WORDS];
 static StackType_t load_test_udp_task_stack[POWER_DETECTION_LOAD_TEST_STACK_WORDS];
 static portMUX_TYPE load_test_status_lock = portMUX_INITIALIZER_UNLOCKED;
 static load_test_status_t load_test_status = {0};
+static voltage_history_sample_t voltage_history[POWER_DETECTION_VOLTAGE_HISTORY_SIZE] = {0};
+static uint8_t voltage_history_next = 0;
+static uint8_t voltage_history_count = 0;
+static int64_t voltage_history_last_sample_ms = 0;
+static wc_timer_t voltage_rising_hold_timer = 0;
 static power_detection_pid_polling_state_t pid_polling_state = {
     .paused = false,
     .reason = NULL,
@@ -299,9 +319,9 @@ static void load_test_task(void *arg)
     vTaskDelete(NULL);
 }
 
-static bool is_ready_mode(void)
+static bool is_12v_supply_mode(void)
 {
-    char *ready_json = autopid_get_value_by_name("DCDC Input Voltage");
+    char *ready_json = autopid_get_value_by_name("DCDC Input Current");
     bool running = false;
 
     if (ready_json)
@@ -314,8 +334,8 @@ static bool is_ready_mode(void)
             {
                 if (cJSON_IsNumber(child))
                 {
-                    // DCDC Power Supply should be 300-400V when supplying power to the 12 system
-                    if (child->valuedouble > 100.0)
+                    // DCDC Power Supply should be >0.0A when supplying power to the 12 system
+                    if (child->valuedouble > 0.0)
                         running = true;
                 }
                 child = child->next;
@@ -326,6 +346,129 @@ static bool is_ready_mode(void)
     }
 
     return running;
+}
+
+static void voltage_history_record(float voltage, int64_t now_ms)
+{
+    if (isnan(voltage))
+    {
+        return;
+    }
+
+    if (voltage_history_count > 0 &&
+        (now_ms - voltage_history_last_sample_ms) < POWER_DETECTION_VOLTAGE_RISE_SAMPLE_INTERVAL_MS)
+    {
+        return;
+    }
+
+    voltage_history[voltage_history_next].timestamp_ms = now_ms;
+    voltage_history[voltage_history_next].voltage = voltage;
+    voltage_history_next = (voltage_history_next + 1) % POWER_DETECTION_VOLTAGE_HISTORY_SIZE;
+    if (voltage_history_count < POWER_DETECTION_VOLTAGE_HISTORY_SIZE)
+    {
+        voltage_history_count++;
+    }
+    voltage_history_last_sample_ms = now_ms;
+}
+
+static void sort_float_values(float *values, uint8_t count)
+{
+    for (uint8_t i = 1; i < count; i++)
+    {
+        float value = values[i];
+        uint8_t j = i;
+
+        while (j > 0 && values[j - 1] > value)
+        {
+            values[j] = values[j - 1];
+            j--;
+        }
+
+        values[j] = value;
+    }
+}
+
+static bool voltage_history_window_median(int64_t now_ms, int64_t min_age_ms, int64_t max_age_ms, float *median, uint8_t *sample_count)
+{
+    float values[POWER_DETECTION_VOLTAGE_HISTORY_SIZE];
+    uint8_t count = 0;
+
+    for (uint8_t i = 0; i < voltage_history_count; i++)
+    {
+        int64_t age_ms = now_ms - voltage_history[i].timestamp_ms;
+        if (age_ms >= min_age_ms && age_ms <= max_age_ms && !isnan(voltage_history[i].voltage))
+        {
+            values[count++] = voltage_history[i].voltage;
+        }
+    }
+
+    if (sample_count)
+    {
+        *sample_count = count;
+    }
+
+    if (count < POWER_DETECTION_VOLTAGE_RISE_MIN_SAMPLES)
+    {
+        return false;
+    }
+
+    sort_float_values(values, count);
+
+    if ((count % 2) == 0)
+    {
+        *median = (values[(count / 2) - 1] + values[count / 2]) / 2.0f;
+    }
+    else
+    {
+        *median = values[count / 2];
+    }
+
+    return true;
+}
+
+static bool voltage_rising_bypass_active(int64_t now_ms)
+{
+    if (voltage_rising_hold_timer != 0 && !wc_timer_is_expired(&voltage_rising_hold_timer))
+    {
+        return true;
+    }
+
+    float current_median = NAN;
+    float baseline_median = NAN;
+    uint8_t current_samples = 0;
+    uint8_t baseline_samples = 0;
+
+    bool have_current = voltage_history_window_median(now_ms,
+                                                      POWER_DETECTION_VOLTAGE_RISE_CURRENT_MIN_AGE_MS,
+                                                      POWER_DETECTION_VOLTAGE_RISE_CURRENT_MAX_AGE_MS,
+                                                      &current_median,
+                                                      &current_samples);
+    bool have_baseline = voltage_history_window_median(now_ms,
+                                                       POWER_DETECTION_VOLTAGE_RISE_BASELINE_MIN_AGE_MS,
+                                                       POWER_DETECTION_VOLTAGE_RISE_BASELINE_MAX_AGE_MS,
+                                                       &baseline_median,
+                                                       &baseline_samples);
+
+    if (!have_current || !have_baseline)
+    {
+        return false;
+    }
+
+    float delta = current_median - baseline_median;
+    if (delta > POWER_DETECTION_VOLTAGE_RISE_DELTA_V)
+    {
+        wc_timer_set(&voltage_rising_hold_timer, POWER_DETECTION_VOLTAGE_RISE_HOLD_MS);
+        ESP_LOGI(TAG,
+                 "Voltage rising bypass: current %.2fV (%u samples) baseline %.2fV (%u samples), delta %.2fV",
+                 current_median,
+                 (unsigned int)current_samples,
+                 baseline_median,
+                 (unsigned int)baseline_samples,
+                 delta);
+        return true;
+    }
+
+    return false;
 }
 
 static bool evaluate_pid_polling_pause(const autopid_config_t *config, float *out_voltage, const char **out_reason)
@@ -349,10 +492,10 @@ static bool evaluate_pid_polling_pause(const autopid_config_t *config, float *ou
         return false;
     }
 
-    if (is_ready_mode())
+    if (is_12v_supply_mode())
     {
         if (out_reason)
-            *out_reason = "ready_mode";
+            *out_reason = "12v supply";
         return false;
     }
 
@@ -373,6 +516,24 @@ static bool evaluate_pid_polling_pause(const autopid_config_t *config, float *ou
         imu_stationary_hold_timer = 0;
     }
 
+    float v = NAN;
+    bool have_voltage = (sleep_mode_get_voltage(&v) == ESP_OK);
+    if (have_voltage)
+    {
+        int64_t now_ms = esp_timer_get_time() / 1000LL;
+
+        if (out_voltage)
+            *out_voltage = v;
+
+        voltage_history_record(v, now_ms);
+        if (voltage_rising_bypass_active(now_ms))
+        {
+            if (out_reason)
+                *out_reason = "voltage_rise";
+            return false;
+        }
+    }
+
     // Mode: disable PID requests when below Power Saving -> Sleep Voltage threshold.
     // Uses dev_status voltage bit (set by sleep_mode task).
     if (config->disable_pid_requests_on_sleep_voltage && !dev_status_is_wake_voltage_ok())
@@ -385,11 +546,8 @@ static bool evaluate_pid_polling_pause(const autopid_config_t *config, float *ou
     // Mode: disable PID requests when below a custom Automate threshold.
     if (config->disable_pid_requests_on_automate_threshold)
     {
-        float v = 0.0f;
-        if (sleep_mode_get_voltage(&v) == ESP_OK)
+        if (have_voltage)
         {
-            if (out_voltage)
-                *out_voltage = v;
             if (v < config->pid_polling_min_voltage)
             {
                 if (out_reason)
