@@ -101,6 +101,7 @@
 #include "obd2_standard_pids.h"
 #include "restart_tracker.h"
 #include "restart_tracker_http.h"
+#include "icm42670.h"
 
 #include <ws_router.h>
 #include "ws_server.h"
@@ -253,6 +254,19 @@ static char timezone_val[64] = "CST6CDT,M3.2.0,M11.1.0";
 // --- NEW MQTT TIMESTAMP SETTING ---
 static char mqtt_include_timestamp_val[16] = "enable";
 // ----------------------------------
+
+static void config_server_load_string(cJSON *root, const char *key_name, char *dest, size_t dest_size, const char *default_value)
+{
+	cJSON *key = cJSON_GetObjectItem(root, key_name);
+	if(key == 0 || key->valuestring == NULL || strlen(key->valuestring) == 0 || strlen(key->valuestring) >= dest_size)
+	{
+		strlcpy(dest, default_value, dest_size);
+	}
+	else
+	{
+		strlcpy(dest, key->valuestring, dest_size);
+	}
+}
 
 static void config_server_schedule_reboot(restart_tracker_planned_reason_t reason,
 								  restart_tracker_source_t source,
@@ -1913,6 +1927,15 @@ char *config_server_get_status_json(bool remove_sensitive_info)
 	cJSON_AddStringToObject(root, "log_period", device_config.log_period);
 	cJSON_AddStringToObject(root, "log_storage", device_config.log_storage);
 	cJSON_AddStringToObject(root, "imu_threshold", device_config.imu_threshold);
+	cJSON_AddStringToObject(root, "imu_wom_x", device_config.imu_wom_x);
+	cJSON_AddStringToObject(root, "imu_wom_y", device_config.imu_wom_y);
+	cJSON_AddStringToObject(root, "imu_wom_z", device_config.imu_wom_z);
+	cJSON_AddStringToObject(root, "imu_smd", device_config.imu_smd);
+	cJSON_AddStringToObject(root, "imu_accel_odr", device_config.imu_accel_odr);
+	cJSON_AddStringToObject(root, "imu_accel_avg", device_config.imu_accel_avg);
+	cJSON_AddStringToObject(root, "imu_wom_int_dur", device_config.imu_wom_int_dur);
+	cJSON_AddStringToObject(root, "imu_wom_int_mode", device_config.imu_wom_int_mode);
+	cJSON_AddStringToObject(root, "imu_wom_ref_mode", device_config.imu_wom_ref_mode);
 	cJSON_AddStringToObject(root, "elm327_udp_log", device_config.elm327_udp_log);
 	if(gpio_get_level(OBD_READY_PIN) == 1)
 	{
@@ -3552,6 +3575,25 @@ static void config_server_load_cfg(char *cfg)
 	ESP_LOGI(TAG, "device_config.imu_threshold: %s", device_config.imu_threshold);
 	//*****
 
+	config_server_load_string(root, "imu_wom_x", device_config.imu_wom_x, sizeof(device_config.imu_wom_x), "enable");
+	config_server_load_string(root, "imu_wom_y", device_config.imu_wom_y, sizeof(device_config.imu_wom_y), "enable");
+	config_server_load_string(root, "imu_wom_z", device_config.imu_wom_z, sizeof(device_config.imu_wom_z), "disable");
+	config_server_load_string(root, "imu_smd", device_config.imu_smd, sizeof(device_config.imu_smd), "disable");
+	config_server_load_string(root, "imu_accel_odr", device_config.imu_accel_odr, sizeof(device_config.imu_accel_odr), "ICM42670_ACCEL_ODR_50HZ");
+	config_server_load_string(root, "imu_accel_avg", device_config.imu_accel_avg, sizeof(device_config.imu_accel_avg), "ICM42670_ACCEL_AVG_32X");
+	config_server_load_string(root, "imu_wom_int_dur", device_config.imu_wom_int_dur, sizeof(device_config.imu_wom_int_dur), "ICM42670_WOM_INT_DUR_FOURTH");
+	config_server_load_string(root, "imu_wom_int_mode", device_config.imu_wom_int_mode, sizeof(device_config.imu_wom_int_mode), "ICM42670_WOM_INT_MODE_ALL_OR");
+	config_server_load_string(root, "imu_wom_ref_mode", device_config.imu_wom_ref_mode, sizeof(device_config.imu_wom_ref_mode), "ICM42670_WOM_MODE_REF_INITIAL");
+	ESP_LOGI(TAG, "device_config.imu_wom_x: %s", device_config.imu_wom_x);
+	ESP_LOGI(TAG, "device_config.imu_wom_y: %s", device_config.imu_wom_y);
+	ESP_LOGI(TAG, "device_config.imu_wom_z: %s", device_config.imu_wom_z);
+	ESP_LOGI(TAG, "device_config.imu_smd: %s", device_config.imu_smd);
+	ESP_LOGI(TAG, "device_config.imu_accel_odr: %s", device_config.imu_accel_odr);
+	ESP_LOGI(TAG, "device_config.imu_accel_avg: %s", device_config.imu_accel_avg);
+	ESP_LOGI(TAG, "device_config.imu_wom_int_dur: %s", device_config.imu_wom_int_dur);
+	ESP_LOGI(TAG, "device_config.imu_wom_int_mode: %s", device_config.imu_wom_int_mode);
+	ESP_LOGI(TAG, "device_config.imu_wom_ref_mode: %s", device_config.imu_wom_ref_mode);
+
 	//*****
 	// elm327_udp_log (optional; default disabled)
 	key = cJSON_GetObjectItem(root,"elm327_udp_log");
@@ -4411,13 +4453,119 @@ int8_t config_server_get_imu_threshold(uint8_t *imu_threshold)
 		return -1;
 	}
 	
-	// Validate range (1-32 for ICM-42670-P)
-	if (imu_int < 1 || imu_int > 32)
+	// Validate raw 8-bit ICM-42670-P WoM threshold range.
+	if (imu_int < 0 || imu_int > 255)
 	{
 		return -1;
 	}
 	
 	*imu_threshold = (uint8_t)imu_int;
+	return 1;
+}
+
+typedef struct {
+	const char *name;
+	uint8_t value;
+} config_enum_map_t;
+
+static uint8_t config_server_enum_value_or_default(const char *name, const config_enum_map_t *map, size_t map_count, uint8_t default_value)
+{
+	if(name == NULL)
+	{
+		return default_value;
+	}
+
+	for(size_t i = 0; i < map_count; i++)
+	{
+		if(strcmp(name, map[i].name) == 0)
+		{
+			return map[i].value;
+		}
+	}
+
+	return default_value;
+}
+
+static bool config_server_enable_value_or_default(const char *name, bool default_value)
+{
+	if(name == NULL)
+	{
+		return default_value;
+	}
+
+	if(strcmp(name, "enable") == 0)
+	{
+		return true;
+	}
+
+	if(strcmp(name, "disable") == 0)
+	{
+		return false;
+	}
+
+	return default_value;
+}
+
+int8_t config_server_get_imu_settings(config_server_imu_settings_t *settings)
+{
+	if(settings == NULL)
+	{
+		return -1;
+	}
+
+	static const config_enum_map_t accel_odr_map[] = {
+		{"ICM42670_ACCEL_ODR_1_5625HZ", ICM42670_ACCEL_ODR_1_5625HZ},
+		{"ICM42670_ACCEL_ODR_3_125HZ", ICM42670_ACCEL_ODR_3_125HZ},
+		{"ICM42670_ACCEL_ODR_6_25HZ", ICM42670_ACCEL_ODR_6_25HZ},
+		{"ICM42670_ACCEL_ODR_12_5HZ", ICM42670_ACCEL_ODR_12_5HZ},
+		{"ICM42670_ACCEL_ODR_25HZ", ICM42670_ACCEL_ODR_25HZ},
+		{"ICM42670_ACCEL_ODR_50HZ", ICM42670_ACCEL_ODR_50HZ},
+		{"ICM42670_ACCEL_ODR_100HZ", ICM42670_ACCEL_ODR_100HZ},
+		{"ICM42670_ACCEL_ODR_200HZ", ICM42670_ACCEL_ODR_200HZ},
+		{"ICM42670_ACCEL_ODR_400HZ", ICM42670_ACCEL_ODR_400HZ},
+		{"ICM42670_ACCEL_ODR_800HZ", ICM42670_ACCEL_ODR_800HZ},
+		{"ICM42670_ACCEL_ODR_1_6KHZ", ICM42670_ACCEL_ODR_1_6KHZ},
+	};
+	static const config_enum_map_t accel_avg_map[] = {
+		{"ICM42670_ACCEL_AVG_2X", ICM42670_ACCEL_AVG_2X},
+		{"ICM42670_ACCEL_AVG_4X", ICM42670_ACCEL_AVG_4X},
+		{"ICM42670_ACCEL_AVG_8X", ICM42670_ACCEL_AVG_8X},
+		{"ICM42670_ACCEL_AVG_16X", ICM42670_ACCEL_AVG_16X},
+		{"ICM42670_ACCEL_AVG_32X", ICM42670_ACCEL_AVG_32X},
+		{"ICM42670_ACCEL_AVG_64X", ICM42670_ACCEL_AVG_64X},
+	};
+	static const config_enum_map_t wom_int_dur_map[] = {
+		{"ICM42670_WOM_INT_DUR_FIRST", ICM42670_WOM_INT_DUR_FIRST},
+		{"ICM42670_WOM_INT_DUR_SECOND", ICM42670_WOM_INT_DUR_SECOND},
+		{"ICM42670_WOM_INT_DUR_THIRD", ICM42670_WOM_INT_DUR_THIRD},
+		{"ICM42670_WOM_INT_DUR_FOURTH", ICM42670_WOM_INT_DUR_FOURTH},
+	};
+	static const config_enum_map_t wom_int_mode_map[] = {
+		{"ICM42670_WOM_INT_MODE_ALL_OR", ICM42670_WOM_INT_MODE_ALL_OR},
+		{"ICM42670_WOM_INT_MODE_ALL_AND", ICM42670_WOM_INT_MODE_ALL_AND},
+	};
+	static const config_enum_map_t wom_ref_mode_map[] = {
+		{"ICM42670_WOM_MODE_REF_INITIAL", ICM42670_WOM_MODE_REF_INITIAL},
+		{"ICM42670_WOM_MODE_REF_LAST", ICM42670_WOM_MODE_REF_LAST},
+	};
+
+	settings->threshold = 8;
+	(void)config_server_get_imu_threshold(&settings->threshold);
+	settings->wom_x_enabled = config_server_enable_value_or_default(device_config.imu_wom_x, true);
+	settings->wom_y_enabled = config_server_enable_value_or_default(device_config.imu_wom_y, true);
+	settings->wom_z_enabled = config_server_enable_value_or_default(device_config.imu_wom_z, false);
+	settings->smd_enabled = config_server_enable_value_or_default(device_config.imu_smd, false);
+	settings->accel_odr = config_server_enum_value_or_default(device_config.imu_accel_odr, accel_odr_map,
+		sizeof(accel_odr_map) / sizeof(accel_odr_map[0]), ICM42670_ACCEL_ODR_50HZ);
+	settings->accel_avg = config_server_enum_value_or_default(device_config.imu_accel_avg, accel_avg_map,
+		sizeof(accel_avg_map) / sizeof(accel_avg_map[0]), ICM42670_ACCEL_AVG_32X);
+	settings->wom_int_dur = config_server_enum_value_or_default(device_config.imu_wom_int_dur, wom_int_dur_map,
+		sizeof(wom_int_dur_map) / sizeof(wom_int_dur_map[0]), ICM42670_WOM_INT_DUR_FOURTH);
+	settings->wom_int_mode = config_server_enum_value_or_default(device_config.imu_wom_int_mode, wom_int_mode_map,
+		sizeof(wom_int_mode_map) / sizeof(wom_int_mode_map[0]), ICM42670_WOM_INT_MODE_ALL_OR);
+	settings->wom_ref_mode = config_server_enum_value_or_default(device_config.imu_wom_ref_mode, wom_ref_mode_map,
+		sizeof(wom_ref_mode_map) / sizeof(wom_ref_mode_map[0]), ICM42670_WOM_MODE_REF_INITIAL);
+
 	return 1;
 }
 

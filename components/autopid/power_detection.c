@@ -36,10 +36,10 @@
 #include "ble.h"
 #include "dev_status.h"
 #include "hw_config.h"
+#include "imu.h"
 #include "lwip/inet.h"
 #include "lwip/sockets.h"
 #include "sleep_mode.h"
-#include "vehicle.h"
 #include "wc_timer.h"
 
 #define TAG "POWER_DETECTION"
@@ -358,28 +358,12 @@ static bool evaluate_pid_polling_pause(const autopid_config_t *config, float *ou
 
     if (config->imu_voltage_override_enabled)
     {
-        vehicle_motion_state_t motion_state = vehicle_motion_state();
-        if (motion_state == VEHICLE_MOTION_ACTIVE)
+        activity_state_t imu_state = imu_get_activity_state();
+        if (imu_state == ACTIVITY_STATE_ACTIVE)
         {
             motion_was_active = true;
             if (out_reason)
                 *out_reason = "imu_active";
-            return false;
-        }
-
-        if (motion_was_active)
-        {
-            motion_was_active = false;
-            wc_timer_set(&imu_stationary_hold_timer, POWER_DETECTION_IMU_STATIONARY_HOLD_MS);
-            ESP_LOGI(TAG, "IMU became stationary, allowing PID polling for %d seconds",
-                     POWER_DETECTION_IMU_STATIONARY_HOLD_MS / 1000);
-        }
-
-        if (imu_stationary_hold_timer != 0 &&
-            !wc_timer_is_expired(&imu_stationary_hold_timer))
-        {
-            if (out_reason)
-                *out_reason = "imu_stationary_hold";
             return false;
         }
     }

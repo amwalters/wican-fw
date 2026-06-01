@@ -168,6 +168,10 @@ static void autopid_add_motion_status_to_json(cJSON *root)
     cJSON_AddBoolToObject(root, "imu_trigger_x", (imu_status2 & ICM42670_WOM_X_INT_BITS) != 0);
     cJSON_AddBoolToObject(root, "imu_trigger_y", (imu_status2 & ICM42670_WOM_Y_INT_BITS) != 0);
     cJSON_AddBoolToObject(root, "imu_trigger_z", (imu_status2 & ICM42670_WOM_Z_INT_BITS) != 0);
+    cJSON_AddNumberToObject(root, "imu_trigger_x_count", imu_get_wom_x_count());
+    cJSON_AddNumberToObject(root, "imu_trigger_y_count", imu_get_wom_y_count());
+    cJSON_AddNumberToObject(root, "imu_trigger_z_count", imu_get_wom_z_count());
+    cJSON_AddNumberToObject(root, "imu_last_active_ms", imu_get_last_active_ms());
     cJSON_AddBoolToObject(root, "power_load_test_active", power_detection_load_test_is_active());
 
     if (imu_status2 & ICM42670_SMD_INT_BITS)

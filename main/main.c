@@ -683,11 +683,24 @@ void app_main(void)
 	gpio_pulldown_dis(4);
 	
 	#if HARDWARE_VER == WICAN_PRO
-	uint8_t imu_threshold = 8; // Default value
-	if(config_server_get_imu_threshold(&imu_threshold) != 0) {
-		ESP_LOGW(TAG, "Failed to get IMU threshold from config, using default: %d", imu_threshold);
+	imu_wom_settings_t imu_settings;
+	config_server_imu_settings_t config_imu_settings;
+	imu_default_wom_settings(&imu_settings);
+	if(config_server_get_imu_settings(&config_imu_settings) == 1) {
+		imu_settings.threshold = config_imu_settings.threshold;
+		imu_settings.wom_x_enabled = config_imu_settings.wom_x_enabled;
+		imu_settings.wom_y_enabled = config_imu_settings.wom_y_enabled;
+		imu_settings.wom_z_enabled = config_imu_settings.wom_z_enabled;
+		imu_settings.smd_enabled = config_imu_settings.smd_enabled;
+		imu_settings.accel_odr = (icm42670_accel_odr_t)config_imu_settings.accel_odr;
+		imu_settings.accel_avg = (icm42670_accel_avg_t)config_imu_settings.accel_avg;
+		imu_settings.wom_int_dur = (icm42670_wom_int_dur_t)config_imu_settings.wom_int_dur;
+		imu_settings.wom_int_mode = (icm42670_wom_int_mode_t)config_imu_settings.wom_int_mode;
+		imu_settings.wom_ref_mode = (icm42670_wom_mode_t)config_imu_settings.wom_ref_mode;
+	} else {
+		ESP_LOGW(TAG, "Failed to get IMU settings from config, using defaults");
 	}
-	imu_init(I2C_MASTER_NUM, I2C_MASTER_SDA_IO, I2C_MASTER_SCL_IO, IMU_INT_GPIO_NUM, imu_threshold);
+	imu_init(I2C_MASTER_NUM, I2C_MASTER_SDA_IO, I2C_MASTER_SCL_IO, IMU_INT_GPIO_NUM, &imu_settings);
 	rtcm_init(I2C_MASTER_NUM);
 	wusb3801_init(I2C_MASTER_NUM);
 	rtcm_sync_system_time_from_rtc();

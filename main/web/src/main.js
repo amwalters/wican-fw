@@ -4027,6 +4027,15 @@ async function postConfig() {
     obj["log_storage"] = document.getElementById("log_storage").value;
     obj["log_period"] = document.getElementById("log_period").value;
     obj["imu_threshold"] = document.getElementById("imu_threshold").value;
+    obj["imu_wom_x"] = document.getElementById("imu_wom_x")?.checked ? "enable" : "disable";
+    obj["imu_wom_y"] = document.getElementById("imu_wom_y")?.checked ? "enable" : "disable";
+    obj["imu_wom_z"] = document.getElementById("imu_wom_z")?.checked ? "enable" : "disable";
+    obj["imu_smd"] = document.getElementById("imu_smd")?.checked ? "enable" : "disable";
+    obj["imu_accel_odr"] = document.getElementById("imu_accel_odr")?.value || "ICM42670_ACCEL_ODR_50HZ";
+    obj["imu_accel_avg"] = document.getElementById("imu_accel_avg")?.value || "ICM42670_ACCEL_AVG_32X";
+    obj["imu_wom_int_dur"] = document.getElementById("imu_wom_int_dur")?.value || "ICM42670_WOM_INT_DUR_FOURTH";
+    obj["imu_wom_int_mode"] = document.getElementById("imu_wom_int_mode")?.value || "ICM42670_WOM_INT_MODE_ALL_OR";
+    obj["imu_wom_ref_mode"] = document.getElementById("imu_wom_ref_mode")?.value || "ICM42670_WOM_MODE_REF_INITIAL";
     obj["elm327_udp_log"] = document.getElementById("elm327_udp_log").value;
 
 
@@ -4774,7 +4783,27 @@ async function Load() {
         
         // Load IMU threshold value and update display
         document.getElementById("imu_threshold").value = obj.imu_threshold || "8";
-        document.getElementById("imu_threshold_value").textContent = ((obj.imu_threshold || 8) * 3.9).toFixed(1) + ' mg';
+        document.getElementById("imu_threshold_value").textContent = ((obj.imu_threshold || 8) * 1000 / 256).toFixed(1) + ' mg';
+
+        const imuWomX = document.getElementById("imu_wom_x");
+        const imuWomY = document.getElementById("imu_wom_y");
+        const imuWomZ = document.getElementById("imu_wom_z");
+        const imuSmd = document.getElementById("imu_smd");
+        if (imuWomX) imuWomX.checked = obj.imu_wom_x !== "disable";
+        if (imuWomY) imuWomY.checked = obj.imu_wom_y !== "disable";
+        if (imuWomZ) imuWomZ.checked = obj.imu_wom_z === "enable";
+        if (imuSmd) imuSmd.checked = obj.imu_smd === "enable";
+
+        const imuAccelOdr = document.getElementById("imu_accel_odr");
+        const imuAccelAvg = document.getElementById("imu_accel_avg");
+        const imuWomIntDur = document.getElementById("imu_wom_int_dur");
+        const imuWomIntMode = document.getElementById("imu_wom_int_mode");
+        const imuWomRefMode = document.getElementById("imu_wom_ref_mode");
+        if (imuAccelOdr) imuAccelOdr.value = obj.imu_accel_odr || "ICM42670_ACCEL_ODR_50HZ";
+        if (imuAccelAvg) imuAccelAvg.value = obj.imu_accel_avg || "ICM42670_ACCEL_AVG_32X";
+        if (imuWomIntDur) imuWomIntDur.value = obj.imu_wom_int_dur || "ICM42670_WOM_INT_DUR_FOURTH";
+        if (imuWomIntMode) imuWomIntMode.value = obj.imu_wom_int_mode || "ICM42670_WOM_INT_MODE_ALL_OR";
+        if (imuWomRefMode) imuWomRefMode.value = obj.imu_wom_ref_mode || "ICM42670_WOM_MODE_REF_INITIAL";
 
         // Load ELM327 UDP log toggle (default disabled)
         const elmUdp = document.getElementById("elm327_udp_log");

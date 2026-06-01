@@ -21,6 +21,8 @@
 
 
 #pragma once
+#include <stdbool.h>
+#include <stdint.h>
 #include "esp_tls_crypto.h"
 #include <esp_http_server.h>
 
@@ -82,6 +84,19 @@ typedef enum
 	DRIVE_CONNECTION_BLE,
 	DRIVE_CONNECTION_MAX
 }drive_connection_type_t;
+
+typedef struct {
+	uint8_t threshold;
+	bool wom_x_enabled;
+	bool wom_y_enabled;
+	bool wom_z_enabled;
+	bool smd_enabled;
+	uint8_t accel_odr;
+	uint8_t accel_avg;
+	uint8_t wom_int_dur;
+	uint8_t wom_int_mode;
+	uint8_t wom_ref_mode;
+} config_server_imu_settings_t;
 
 typedef struct _device_config
 {
@@ -179,6 +194,15 @@ typedef struct _device_config
 	char log_filesystem[16];
 	char log_period[16];
 	char imu_threshold[16];
+	char imu_wom_x[10];
+	char imu_wom_y[10];
+	char imu_wom_z[10];
+	char imu_smd[10];
+	char imu_accel_odr[32];
+	char imu_accel_avg[32];
+	char imu_wom_int_dur[32];
+	char imu_wom_int_mode[32];
+	char imu_wom_ref_mode[32];
 	bool debug_enabled;
         char sta_home_priority[33];
 }device_config_t;
@@ -261,6 +285,7 @@ int8_t config_server_get_ap_auto_disable(void);
 int8_t config_server_get_periodic_wakeup(void);
 int8_t config_server_get_wakeup_interval(uint32_t *wakeup_interval);
 int8_t config_server_get_imu_threshold(uint8_t *imu_threshold);
+int8_t config_server_get_imu_settings(config_server_imu_settings_t *settings);
 bool config_server_is_debug_enabled(void);
 bool config_server_get_mqtt_security_enabled(void);
 char *config_server_get_mqtt_cert_set(void);

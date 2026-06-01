@@ -21,6 +21,7 @@
  
 #include "imu.h"
 #include "esp_log.h"
+#include "esp_timer.h"
 #include "driver/i2c.h"
 #include "driver/gpio.h"
 #include "hw_config.h"
@@ -36,14 +37,36 @@
 static icm42670_t dev = {0};
 static QueueHandle_t imu_motion_evt_queue = NULL;
 static QueueHandle_t activity_state_queue = NULL;
-static uint8_t imu_wom_threshold = 8; // Default threshold value
+static imu_wom_settings_t imu_wom_settings;
 static volatile uint8_t imu_last_int_status2 = 0;
+static volatile uint32_t imu_wom_x_count = 0;
+static volatile uint32_t imu_wom_y_count = 0;
+static volatile uint32_t imu_wom_z_count = 0;
+static volatile uint32_t imu_last_active_ms = 0;
 // Static storage for imu_motion_evt_queue (length 10, item size uint32_t)
 static StaticQueue_t imu_motion_evt_queue_struct;
 static uint8_t imu_motion_evt_queue_storage[10 * sizeof(uint32_t)];
 // Static storage for activity_state_queue (length 1, item size activity_state_t)
 static StaticQueue_t activity_state_queue_struct;
 static uint8_t activity_state_queue_storage[1 * sizeof(activity_state_t)];
+
+void imu_default_wom_settings(imu_wom_settings_t *settings)
+{
+    if (settings == NULL) {
+        return;
+    }
+
+    settings->threshold = 8;
+    settings->wom_x_enabled = true;
+    settings->wom_y_enabled = true;
+    settings->wom_z_enabled = false;
+    settings->smd_enabled = false;
+    settings->accel_odr = ICM42670_ACCEL_ODR_50HZ;
+    settings->accel_avg = ICM42670_ACCEL_AVG_32X;
+    settings->wom_int_dur = ICM42670_WOM_INT_DUR_FOURTH;
+    settings->wom_int_mode = ICM42670_WOM_INT_MODE_ALL_OR;
+    settings->wom_ref_mode = ICM42670_WOM_MODE_REF_INITIAL;
+}
 
 void IRAM_ATTR imu_isr_handler(void* arg)
 {
@@ -58,12 +81,22 @@ static void imu_motion_task(void *pvParameters)
     activity_state_t last_reported_state = ACTIVITY_STATE_STATIONARY;
 
     // Get configurable WoM threshold from configuration
-    // The threshold value is an 8-bit value where 1 LSB = 3.9mg for ICM-42670-P
-    // Range: 1-32, where each unit represents 3.9mg of acceleration
-    uint8_t threshold = imu_wom_threshold;
-    ESP_LOGI(TAG, "Using IMU threshold: %d (%.1fmg)", threshold, threshold * 3.9f);
-    
-    esp_err_t ret = imu_config_wom(threshold);
+    // The threshold value is an 8-bit value where 1 LSB = 1000mg / 256 for ICM-42670-P
+    // Range: 0-255, where each unit represents about 3.9mg of acceleration
+    imu_wom_settings_t settings = imu_wom_settings;
+    ESP_LOGI(TAG, "Using IMU threshold: %d (%.1fmg)", settings.threshold, settings.threshold * 1000.0f / 256.0f);
+    ESP_LOGI(TAG, "Using IMU WOM sources: x=%d y=%d z=%d smd=%d",
+        settings.wom_x_enabled, settings.wom_y_enabled, settings.wom_z_enabled, settings.smd_enabled);
+    ESP_LOGI(TAG, "Using IMU WOM config: odr=%d avg=%d dur=%d mode=%d ref=%d",
+        settings.accel_odr, settings.accel_avg, settings.wom_int_dur, settings.wom_int_mode, settings.wom_ref_mode);
+
+    esp_err_t ret = icm42670_set_accel_pwr_mode(&dev, ICM42670_ACCEL_DISABLE);
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to disable accel before WoM config");
+        return;
+    }
+
+    ret = imu_config_wom(&settings);
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "Failed to configure WoM");
         return;
@@ -107,6 +140,14 @@ static void imu_motion_task(void *pvParameters)
             else if (status2 & (ICM42670_SMD_INT_BITS | ICM42670_WOM_X_INT_BITS | ICM42670_WOM_Y_INT_BITS | ICM42670_WOM_Z_INT_BITS))
             {
                 imu_last_int_status2 = status2;
+                imu_last_active_ms = (uint32_t)(esp_timer_get_time() / 1000ULL);
+
+                if (status2 & ICM42670_WOM_X_INT_BITS)
+                    imu_wom_x_count++;
+                if (status2 & ICM42670_WOM_Y_INT_BITS)
+                    imu_wom_y_count++;
+                if (status2 & ICM42670_WOM_Z_INT_BITS)
+                    imu_wom_z_count++;
 
                 // Motion detected by SMD/WoM
                 wc_timer_set(&motion_timer, STATIONARY_TIME_MS);
@@ -170,13 +211,35 @@ uint8_t imu_get_last_int_status2(void)
     return imu_last_int_status2;
 }
 
+uint32_t imu_get_wom_x_count(void)
+{
+    return imu_wom_x_count;
+}
+
+uint32_t imu_get_wom_y_count(void)
+{
+    return imu_wom_y_count;
+}
+
+uint32_t imu_get_wom_z_count(void)
+{
+    return imu_wom_z_count;
+}
+
+uint32_t imu_get_last_active_ms(void)
+{
+    return imu_last_active_ms;
+}
+
 //TODO: scl_gpio, scl_gpio amd int_gpio are not used
-esp_err_t imu_init(i2c_port_t i2c_num, gpio_num_t sda_gpio, gpio_num_t scl_gpio, gpio_num_t int_gpio, uint8_t threshold)
+esp_err_t imu_init(i2c_port_t i2c_num, gpio_num_t sda_gpio, gpio_num_t scl_gpio, gpio_num_t int_gpio, const imu_wom_settings_t *settings)
 {
     esp_err_t ret;
 
-    // Store the threshold for use by the motion task
-    imu_wom_threshold = threshold;
+    imu_default_wom_settings(&imu_wom_settings);
+    if (settings != NULL) {
+        imu_wom_settings = *settings;
+    }
 
     // Configure GPIO for IMU interrupt
     gpio_config_t io_conf = {
@@ -222,14 +285,14 @@ esp_err_t imu_init(i2c_port_t i2c_num, gpio_num_t sda_gpio, gpio_num_t scl_gpio,
         return ret;
     }
 
-    // Set default power modes
-    ret = icm42670_set_gyro_pwr_mode(&dev, ICM42670_GYRO_ENABLE_LN_MODE);
+    // Keep sensors off until WoM is configured.
+    ret = icm42670_set_gyro_pwr_mode(&dev, ICM42670_GYRO_DISABLE);
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "Failed to set gyro power mode");
         return ret;
     }
 
-    ret = icm42670_set_accel_pwr_mode(&dev, ICM42670_ACCEL_ENABLE_LN_MODE);
+    ret = icm42670_set_accel_pwr_mode(&dev, ICM42670_ACCEL_DISABLE);
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "Failed to set accel power mode");
         return ret;
@@ -271,8 +334,12 @@ esp_err_t imu_init(i2c_port_t i2c_num, gpio_num_t sda_gpio, gpio_num_t scl_gpio,
     return ESP_OK;
 }
 
-esp_err_t imu_config_wom(uint8_t threshold)
+esp_err_t imu_config_wom(const imu_wom_settings_t *settings)
 {
+    if (settings == NULL) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
     const icm42670_int_config_t int_config = {
         .mode = ICM42670_INT_MODE_PULSED,
         .drive = ICM42670_INT_DRIVE_PUSH_PULL,
@@ -282,21 +349,20 @@ esp_err_t imu_config_wom(uint8_t threshold)
     ESP_ERROR_CHECK_WITHOUT_ABORT(icm42670_config_int_pin(&dev, 1, int_config));
 
     icm42670_int_source_t sources = {0};
-    sources.wom_x = true;
-    sources.wom_y = true;
-    sources.wom_z = true;
+    sources.wom_x = settings->wom_x_enabled;
+    sources.wom_y = settings->wom_y_enabled;
+    sources.wom_z = settings->wom_z_enabled;
+    sources.smd = settings->smd_enabled;
 
     ESP_ERROR_CHECK_WITHOUT_ABORT(icm42670_set_int_sources(&dev, 1, sources));
 
     const icm42670_wom_config_t wom_config = {
-        .trigger = ICM42670_WOM_INT_DUR_FIRST,
-        //.logical_mode = ICM42670_WOM_INT_MODE_ALL_OR,
-        .logical_mode = ICM42670_WOM_INT_MODE_ALL_AND,
-        .reference = ICM42670_WOM_MODE_REF_INITIAL,
-        //.reference = ICM42670_WOM_MODE_REF_LAST,
-        .wom_x_threshold = threshold,
-        .wom_y_threshold = threshold,
-        .wom_z_threshold = threshold,
+        .trigger = settings->wom_int_dur,
+        .logical_mode = settings->wom_int_mode,
+        .reference = settings->wom_ref_mode,
+        .wom_x_threshold = settings->threshold,
+        .wom_y_threshold = settings->threshold,
+        .wom_z_threshold = settings->threshold,
     };
 
     return icm42670_config_wom(&dev, wom_config);
@@ -307,11 +373,10 @@ esp_err_t imu_enable_wom(bool enable)
     esp_err_t ret = ESP_OK;
 
     if (enable) {
-        // Configure optimal settings for WoM
-        ret = icm42670_set_accel_odr(&dev, ICM42670_ACCEL_ODR_200HZ);
+        ret = icm42670_set_accel_odr(&dev, imu_wom_settings.accel_odr);
         if (ret != ESP_OK) return ret;
 
-        ret = icm42670_set_accel_avg(&dev, ICM42670_ACCEL_AVG_8X);
+        ret = icm42670_set_accel_avg(&dev, imu_wom_settings.accel_avg);
         if (ret != ESP_OK) return ret;
 
         ret = icm42670_set_gyro_pwr_mode(&dev, ICM42670_GYRO_DISABLE);
@@ -320,11 +385,19 @@ esp_err_t imu_enable_wom(bool enable)
         ret = icm42670_set_low_power_clock(&dev, ICM42670_LP_CLK_WUO);
         if (ret != ESP_OK) return ret;
 
+        ret = icm42670_enable_wom(&dev, true);
+        if (ret != ESP_OK) return ret;
+
         ret = icm42670_set_accel_pwr_mode(&dev, ICM42670_ACCEL_ENABLE_LP_MODE);
         if (ret != ESP_OK) return ret;
+
+        return ESP_OK;
     }
 
-    return icm42670_enable_wom(&dev, enable);
+    ret = icm42670_set_accel_pwr_mode(&dev, ICM42670_ACCEL_DISABLE);
+    if (ret != ESP_OK) return ret;
+
+    return icm42670_enable_wom(&dev, false);
 }
 
 esp_err_t imu_read_accel(float *ax, float *ay, float *az)
