@@ -1,0 +1,39 @@
+name: Generate Profile Index
+
+# 1. Trigger the action only when relevant files change
+on:
+  push:
+    branches:
+      - wican-pro 
+    paths:
+      - 'profiles/**.json'
+      - 'scripts/generate_index.py'
+
+# 2. Grant the action permission to push code back to your repo
+permissions:
+  contents: write
+
+jobs:
+  update-index:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Run index generator script
+        run: python scripts/generate_index.py
+
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add profiles/index.json
+          
+          # Only commit and push if the index.json actually changed
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update index.json [skip ci]" && git push)

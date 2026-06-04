@@ -1657,13 +1657,16 @@
                 Four</b> tabs below.
             </div>
             <table class="form-table">
-                <tr>
-                    <td>Vehicle Model:</td>
-                    <td style="display: flex; align-items: center; gap: 5px;">
-                        <select id="car_model" name="car_model" onchange="enableAutoStoreButton();submit_enable();" style="flex: 1;"></select>
-                        <button onclick="fetchVehicleProfiles()" class="success-button" style="margin-left: 5px;">Get Latest</button>
-                    </td>
-                </tr>
+          <tr>
+            <td>Vehicle Model:</td>
+            <td style="display: flex; align-items: center; gap: 5px;">
+                <select id="car_model" name="car_model" onchange="enableAutoStoreButton();submit_enable();" style="flex: 1;"></select>
+      
+                <button onclick="fetchVehicleProfiles('stock')" class="system-button" style="margin-left: 5px;">Get Stock DB</button>
+        
+                <button onclick="fetchVehicleProfiles('group')" class="success-button" style="margin-left: 5px; background-color: #8b5cf6 !important; border-color: #7c3aed !important;">Get Vehicle Group DB</button>
+            </td>
+       </tr>
                 <tr>
                     <td>Vehicle Profiles:</td>
                     <td>
@@ -1671,7 +1674,11 @@
                             <form id="car_data_form" enctype="multipart/form-data" style="flex-grow:1; margin:0;">
                                 <input id="car_data_file" name="car_data_file" type="file" onchange="loadLocalCarModels();submit_enable();" style="width:100%;" />
                             </form>
-                            <button class="system-button success-button" onclick="downloadActiveProfile()" type="button" style="padding: 0.5rem 1rem;">Save Profile</button>
+                            <button class="system-button success-button"
+                            onclick="downloadActiveProfile()" type="button"
+                            style="padding: 0.5rem 1rem;">Save
+                              Profile</button>
+			    <input type="file" id="hidden_yaml_input" accept=".yaml,.yml,.txt" style="display: none;" onchange="finalizeProfileDownloadWithYaml(event)" />
                         </div>
                     </td>
                 </tr>

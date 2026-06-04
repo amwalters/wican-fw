@@ -1,0 +1,4816 @@
+{
+  "cars": [
+    {
+      "car_model": "KIA EV3 2024 Long Range",
+      "init": "ATH1; ATSP6; ATST96;",
+      "pids": [
+        {
+          "pid": "220100",
+          "pid_init": "ATAR; ATSH7B3; ATCRA7BB;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "SPEED",
+              "expression": "B38",
+              "unit": "km/h",
+              "class": "speed",
+              "period": "500",
+              "min": "",
+              "max": "",
+              "type": "MQTT_Topic",
+              "send_to": "wican/ev3speed",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220100",
+          "pid_init": "ATAR; ATSH7B3; ATCRA7BB;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "TMP_A",
+              "expression": "(B12/2)-40",
+              "unit": "°C",
+              "class": "none",
+              "period": "5000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220100",
+          "pid_init": "ATAR; ATSH7B3; ATCRA7BB;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "T_CAB",
+              "expression": "(B11/2)-40",
+              "unit": "°C",
+              "class": "temperature",
+              "period": "5000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220100",
+          "pid_init": "ATAR; ATSH7B3; ATCRA7BB;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "INT_HUMIDITY",
+              "expression": "B37/2",
+              "unit": "%",
+              "class": "humidity",
+              "period": "5000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220102",
+          "pid_init": "ATSH7B3; ATCRA7BB;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "HVAC_COOLANT_TMP",
+              "expression": "(B10 - 80)/2",
+              "unit": "°C",
+              "class": "temperature",
+              "period": "5000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "22E004",
+          "pid_init": "ATAL; ATSH744; ATCRA74C;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "VCMS_HV_R",
+              "expression": "B10:2",
+              "unit": "",
+              "class": "none",
+              "period": "5000",
+              "min": "0",
+              "max": "1",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220105",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "BATT_HEAT",
+              "expression": "B31",
+              "unit": "°C",
+              "class": "temperature",
+              "period": "5000",
+              "min": "-60",
+              "max": "99",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220105",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "REGEN_MAX",
+              "expression": "((B23<<8)+B25)/100",
+              "unit": "kW",
+              "class": "power",
+              "period": "5000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220105",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "POWER_MAX",
+              "expression": "[B26:B27]/100",
+              "unit": "kW",
+              "class": "power",
+              "period": "5000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220105",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "HV_T_6",
+              "expression": "(S15)",
+              "unit": "°C",
+              "class": "temperature",
+              "period": "5000",
+              "min": "-40",
+              "max": "80",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220105",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "HV_T_7",
+              "expression": "(S17)",
+              "unit": "°C",
+              "class": "temperature",
+              "period": "5000",
+              "min": "-40",
+              "max": "80",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220105",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "HV_T_8",
+              "expression": "(S18)",
+              "unit": "°C",
+              "class": "temperature",
+              "period": "5000",
+              "min": "-40",
+              "max": "80",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220105",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "HV_T_9",
+              "expression": "(S19)",
+              "unit": "°C",
+              "class": "temperature",
+              "period": "5000",
+              "min": "-40",
+              "max": "80",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220105",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "HV_T_10",
+              "expression": "(S20)",
+              "unit": "°C",
+              "class": "temperature",
+              "period": "5000",
+              "min": "-40",
+              "max": "80",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220105",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "HV_T_11",
+              "expression": "(S21)",
+              "unit": "°C",
+              "class": "temperature",
+              "period": "5000",
+              "min": "-40",
+              "max": "80",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220105",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "HV_T_12",
+              "expression": "(S22)",
+              "unit": "°C",
+              "class": "temperature",
+              "period": "5000",
+              "min": "-40",
+              "max": "80",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220105",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "HV_T_13",
+              "expression": "(S50)",
+              "unit": "°C",
+              "class": "temperature",
+              "period": "5000",
+              "min": "-40",
+              "max": "80",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220105",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "HV_T_14",
+              "expression": "(S51)",
+              "unit": "°C",
+              "class": "temperature",
+              "period": "5000",
+              "min": "-40",
+              "max": "80",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220105",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "HV_T_15",
+              "expression": "(S52)",
+              "unit": "°C",
+              "class": "temperature",
+              "period": "5000",
+              "min": "-40",
+              "max": "80",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220105",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "HV_T_16",
+              "expression": "(S53)",
+              "unit": "°C",
+              "class": "temperature",
+              "period": "5000",
+              "min": "-40",
+              "max": "80",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220105",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "HV_KWH_R",
+              "expression": "((B37 << 8) + B38) *0.002",
+              "unit": "KWh",
+              "class": "battery",
+              "period": "5000",
+              "min": "0",
+              "max": "77000",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220105",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "SOH",
+              "expression": "[B34:B35]/10",
+              "unit": "%",
+              "class": "",
+              "period": "5000",
+              "min": "0",
+              "max": "105",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220105",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "SOC_D",
+              "expression": "B41/2",
+              "unit": "%",
+              "class": "battery",
+              "period": "5000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220106",
+          "pid_init": "ATAL;ATSH7E4;ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "BMS_COOLANT_TMP",
+              "expression": "(S10)",
+              "unit": "°C",
+              "class": "temperature",
+              "period": "5000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220101",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "LV_V",
+              "expression": "B38*0.1",
+              "unit": "V",
+              "class": "battery",
+              "period": "5000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220101",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "HV_T_MAX",
+              "expression": "(S21)",
+              "unit": "°C",
+              "class": "temperature",
+              "period": "5000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220101",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "HV_T_MIN",
+              "expression": "(S22)",
+              "unit": "°C",
+              "class": "temperature",
+              "period": "5000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220101",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "HV_T_1",
+              "expression": "(S23)",
+              "unit": "°C",
+              "class": "temperature",
+              "period": "5000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220101",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "HV_T_2",
+              "expression": "(S25)",
+              "unit": "°C",
+              "class": "temperature",
+              "period": "5000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220101",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "HV_T_3",
+              "expression": "(S26)",
+              "unit": "°C",
+              "class": "temperature",
+              "period": "5000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220101",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "HV_T_4",
+              "expression": "(S27)",
+              "unit": "°C",
+              "class": "temperature",
+              "period": "5000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220101",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "HV_T_5",
+              "expression": "(S28)",
+              "unit": "°C",
+              "class": "temperature",
+              "period": "5000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220101",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "HV_AH_CHARGED",
+              "expression": "((B39<<24)+(B41<<16)+(B42<<8)+B43)/10",
+              "unit": "Ah",
+              "class": "",
+              "period": "5000",
+              "min": "0",
+              "max": "1000000",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220101",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "HV_AH_DISCHARGED",
+              "expression": "((B44<<24)+(B45<<16)+(B46<<8)+B47)/10",
+              "unit": "Ah",
+              "class": "",
+              "period": "5000",
+              "min": "0",
+              "max": "1000000",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220101",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "KWH_CHARGED",
+              "expression": "((B49<<24)+(B50<<16)+(B51<<8)+B52)/10",
+              "unit": "kWh",
+              "class": "battery",
+              "period": "5000",
+              "min": "0",
+              "max": "1000000",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220101",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "KWH_DISCHARGED",
+              "expression": "((B53<<24)+(B54<<16)+(B55<<8)+B57)/10",
+              "unit": "kWh",
+              "class": "",
+              "period": "5000",
+              "min": "0",
+              "max": "1000000",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220101",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "DM_R_RPM",
+              "expression": "((S36)*256)+B37",
+              "unit": "rpm",
+              "class": "",
+              "period": "5000",
+              "min": "-10100",
+              "max": "10100",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220101",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "ISOLATION_RES",
+              "expression": "((B70<<8)+B71)",
+              "unit": "kΩ",
+              "class": "",
+              "period": "5000",
+              "min": "10",
+              "max": "5000",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220101",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "HV_C_V_MAX",
+              "expression": "B31/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "5000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220101",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "HV_C_V_MAX_NO",
+              "expression": "B33",
+              "unit": "",
+              "class": "",
+              "period": "5000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220101",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "HV_C_V_MIN",
+              "expression": "B34/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "5000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220101",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "HV_C_V_MIN_NO",
+              "expression": "B35",
+              "unit": "",
+              "class": "",
+              "period": "5000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220101",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "OP_TIME",
+              "expression": "((B58<<24)+(B59<<16)+(B60<<8)+B61)/3600",
+              "unit": "hours",
+              "class": "",
+              "period": "5000",
+              "min": "0",
+              "max": "1000000",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220101",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "SOC",
+              "expression": "B10/2",
+              "unit": "%",
+              "class": "battery",
+              "period": "5000",
+              "min": "0",
+              "max": "100",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220101",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "CHARGING_R_A",
+              "expression": "([B13:B14])/10",
+              "unit": "A",
+              "class": "current",
+              "period": "5000",
+              "min": "0",
+              "max": "200",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220101",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "HV_A",
+              "expression": "((S17*256)+B18)/10",
+              "unit": "A",
+              "class": "current",
+              "period": "500",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220101",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "HV_V",
+              "expression": "[B19:B20]/10",
+              "unit": "V",
+              "class": "voltage",
+              "period": "5000",
+              "min": "200",
+              "max": "480",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220101",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "HV_W",
+              "expression": "([B19:B20]/10)*((S17*256)+B18)/10",
+              "unit": "W",
+              "class": "power",
+              "period": "5000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "22C00B",
+          "pid_init": "ATAR; ATSH7A0; ATCRA7A8;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "TYRE_P_FL",
+              "expression": "B10*0.2",
+              "unit": "psi",
+              "class": "pressure",
+              "period": "30000",
+              "min": "0",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "22C00B",
+          "pid_init": "ATAR; ATSH7A0; ATCRA7A8;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "TYRE_P_FR",
+              "expression": "B15*0.2",
+              "unit": "psi",
+              "class": "pressure",
+              "period": "30000",
+              "min": "0",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "22C00B",
+          "pid_init": "ATAR; ATSH7A0; ATCRA7A8;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "TYRE_P_RL",
+              "expression": "B21*0.2",
+              "unit": "psi",
+              "class": "pressure",
+              "period": "30000",
+              "min": "0",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "22C00B",
+          "pid_init": "ATAR; ATSH7A0; ATCRA7A8;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "TYRE_P_RR",
+              "expression": "B27*0.2",
+              "unit": "psi",
+              "class": "pressure",
+              "period": "30000",
+              "min": "0",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "22C00B",
+          "pid_init": "ATAR; ATSH7A0; ATCRA7A8;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "TYRE_T_FL",
+              "expression": "B11-50",
+              "unit": "°C",
+              "class": "temperature",
+              "period": "5000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "22C00B",
+          "pid_init": "ATAR; ATSH7A0; ATCRA7A8;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "TYRE_T_FR",
+              "expression": "B17-50",
+              "unit": "°C",
+              "class": "temperature",
+              "period": "5000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "22C00B",
+          "pid_init": "ATAR; ATSH7A0; ATCRA7A8;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "TYRE_T_RL",
+              "expression": "B22-50",
+              "unit": "°C",
+              "class": "temperature",
+              "period": "5000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "22C00B",
+          "pid_init": "ATAR; ATSH7A0; ATCRA7A8;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "TYRE_T_RR",
+              "expression": "B28-50",
+              "unit": "°C",
+              "class": "temperature",
+              "period": "5000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "22B002",
+          "pid_init": "ATSH7C6;ATCRA7CE;ATFCSH7C6;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "ODOMETER",
+              "expression": "[B12:B14]",
+              "unit": "km",
+              "class": "distance",
+              "period": "5000",
+              "min": "500",
+              "max": "500000",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "22F010",
+          "pid_init": "ATAR; ATSH730; ATCRA738;",
+          "enabled": false,
+          "parameters": [
+            {
+              "name": "STEER_ANGLE",
+              "expression": "((S20)*256+B19)/10",
+              "unit": "deg",
+              "class": "",
+              "period": "5000",
+              "min": "-720",
+              "max": "720",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220102",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v01",
+              "expression": "B10/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220102",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v02",
+              "expression": "B11/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220102",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v03",
+              "expression": "B12/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220102",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v04",
+              "expression": "B13/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220102",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v05",
+              "expression": "B14/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220102",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v06",
+              "expression": "B15/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220102",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v07",
+              "expression": "B17/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220102",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v08",
+              "expression": "B18/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220102",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v09",
+              "expression": "B19/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220102",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v10",
+              "expression": "B20/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220102",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v11",
+              "expression": "B21/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220102",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v12",
+              "expression": "B22/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220102",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v13",
+              "expression": "B23/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220102",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v14",
+              "expression": "B25/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220102",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v15",
+              "expression": "B26/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220102",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v16",
+              "expression": "B27/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220102",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v17",
+              "expression": "B28/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220102",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v18",
+              "expression": "B29/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220102",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v19",
+              "expression": "B30/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220102",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v20",
+              "expression": "B31/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220102",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v21",
+              "expression": "B33/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220102",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v22",
+              "expression": "B34/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220102",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v23",
+              "expression": "B35/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220102",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v24",
+              "expression": "B36/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220102",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v25",
+              "expression": "B37/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220102",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v26",
+              "expression": "B38/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220102",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v27",
+              "expression": "B39/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220102",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v28",
+              "expression": "B41/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220102",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v29",
+              "expression": "B42/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220102",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v30",
+              "expression": "B43/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220102",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v31",
+              "expression": "B44/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220102",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v32",
+              "expression": "B45/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220103",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v33",
+              "expression": "B10/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220103",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v34",
+              "expression": "B11/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220103",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v35",
+              "expression": "B12/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220103",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v36",
+              "expression": "B13/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220103",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v37",
+              "expression": "B14/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220103",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v38",
+              "expression": "B15/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220103",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v39",
+              "expression": "B17/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220103",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v40",
+              "expression": "B18/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220103",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v41",
+              "expression": "B19/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220103",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v42",
+              "expression": "B20/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220103",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v43",
+              "expression": "B21/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220103",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v44",
+              "expression": "B22/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220103",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v45",
+              "expression": "B23/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220103",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v46",
+              "expression": "B25/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220103",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v47",
+              "expression": "B26/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220103",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v48",
+              "expression": "B27/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220103",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v49",
+              "expression": "B28/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220103",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v50",
+              "expression": "B29/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220103",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v51",
+              "expression": "B30/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220103",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v52",
+              "expression": "B31/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220103",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v53",
+              "expression": "B33/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220103",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v54",
+              "expression": "B34/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220103",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v55",
+              "expression": "B35/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220103",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v56",
+              "expression": "B36/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220103",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v57",
+              "expression": "B37/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220103",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v58",
+              "expression": "B38/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220103",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v59",
+              "expression": "B39/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220103",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v60",
+              "expression": "B41/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220103",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v61",
+              "expression": "B42/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220103",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v62",
+              "expression": "B43/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220103",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v63",
+              "expression": "B44/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220103",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v64",
+              "expression": "B45/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220104",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v65",
+              "expression": "B10/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220104",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v66",
+              "expression": "B11/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220104",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v67",
+              "expression": "B12/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220104",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v68",
+              "expression": "B13/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220104",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v69",
+              "expression": "B14/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220104",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v70",
+              "expression": "B15/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220104",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v71",
+              "expression": "B17/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220104",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v72",
+              "expression": "B18/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220104",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v73",
+              "expression": "B19/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220104",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v74",
+              "expression": "B20/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220104",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v75",
+              "expression": "B21/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220104",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v76",
+              "expression": "B22/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220104",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v77",
+              "expression": "B23/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220104",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v78",
+              "expression": "B25/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220104",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v79",
+              "expression": "B26/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220104",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v80",
+              "expression": "B27/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220104",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v81",
+              "expression": "B28/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220104",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v82",
+              "expression": "B29/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220104",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v83",
+              "expression": "B30/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220104",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v84",
+              "expression": "B31/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220104",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v85",
+              "expression": "B33/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220104",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v86",
+              "expression": "B34/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220104",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v87",
+              "expression": "B35/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220104",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v88",
+              "expression": "B36/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220104",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v89",
+              "expression": "B37/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220104",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v90",
+              "expression": "B38/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220104",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v91",
+              "expression": "B39/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220104",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v92",
+              "expression": "B41/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        },
+        {
+          "pid": "220104",
+          "pid_init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "enabled": true,
+          "parameters": [
+            {
+              "name": "v93",
+              "expression": "B42/50",
+              "unit": "V",
+              "class": "voltage",
+              "period": "33000",
+              "min": "",
+              "max": "",
+              "type": "Default",
+              "send_to": "",
+              "onchange": false
+            }
+          ]
+        }
+      ],
+      "can_filters": [],
+      "pid_groups": [
+        {
+          "group_name": "A7E 22B002",
+          "init": "ATSH7C6;ATCRA7CE;ATFCSH7C6;",
+          "period": 5000,
+          "condition": "always",
+          "enabled": true,
+          "pids": [
+            {
+              "pid": "22B002",
+              "pid_description": "ODOMETER",
+              "enabled": true,
+              "_collapsed": false,
+              "parameters": [
+                {
+                  "name": "ODOMETER",
+                  "expression": "[B12:B14]",
+                  "unit": "km",
+                  "class": "distance",
+                  "min": "1100",
+                  "max": 500000,
+                  "destination_type": "MQTT_Grp",
+                  "send_to": "",
+                  "onchange": false,
+                  "enabled": true
+                }
+              ]
+            }
+          ],
+          "_collapsed": false,
+          "mqtt_topic": "wican/ev3/odometer",
+          "wake_voltage": 11.3,
+          "custom_pid_init": "",
+          "custom_pid_mode": "",
+          "custom_pid_expr": "A",
+          "custom_pid_operator": "greater",
+          "custom_pid_value": 0
+        },
+        {
+          "group_name": "7A0 22C00B",
+          "init": "ATAR; ATSH7A0; ATCRA7A8;",
+          "period": 60000,
+          "condition": "always",
+          "enabled": true,
+          "pids": [
+            {
+              "pid": "22C00B",
+              "pid_description": "TYRE_P_FL",
+              "enabled": true,
+              "_collapsed": true,
+              "parameters": [
+                {
+                  "name": "TYRE_P_FL",
+                  "expression": "B10*0.2",
+                  "unit": "psi",
+                  "class": "pressure",
+                  "min": 0,
+                  "max": "",
+                  "destination_type": "MQTT_Grp",
+                  "send_to": "",
+                  "onchange": false,
+                  "enabled": true
+                },
+                {
+                  "name": "TYRE_P_FR",
+                  "expression": "B15*0.2",
+                  "unit": "psi",
+                  "enabled": true,
+                  "onchange": false,
+                  "destination_type": "MQTT_Grp",
+                  "class": "pressure",
+                  "min": "0"
+                },
+                {
+                  "name": "TYRE_P_RL",
+                  "expression": "B21*0.2",
+                  "unit": "psi",
+                  "enabled": true,
+                  "onchange": false,
+                  "destination_type": "MQTT_Grp",
+                  "min": "0"
+                },
+                {
+                  "name": "TYRE_P_RR",
+                  "expression": "B27*0.2",
+                  "unit": "psi",
+                  "enabled": true,
+                  "onchange": false,
+                  "destination_type": "MQTT_Grp",
+                  "class": "pressure",
+                  "min": "0"
+                },
+                {
+                  "name": "TYRE_T_FL",
+                  "expression": "B11-50",
+                  "unit": "°C",
+                  "enabled": true,
+                  "onchange": false,
+                  "destination_type": "MQTT_Grp",
+                  "class": "temperature"
+                },
+                {
+                  "name": "TYRE_T_FR",
+                  "expression": "B17-50",
+                  "unit": "°C",
+                  "enabled": true,
+                  "onchange": false,
+                  "destination_type": "MQTT_Grp",
+                  "class": "temperature"
+                },
+                {
+                  "name": "TYRE_T_RL",
+                  "expression": "B22-50",
+                  "unit": "°C",
+                  "enabled": true,
+                  "onchange": false,
+                  "destination_type": "MQTT_Grp",
+                  "class": "temperature"
+                },
+                {
+                  "name": "TYRE_T_RR",
+                  "expression": "B28-50",
+                  "unit": "°C",
+                  "enabled": true,
+                  "onchange": false,
+                  "destination_type": "MQTT_Grp",
+                  "class": "temperature"
+                }
+              ]
+            }
+          ],
+          "_collapsed": false,
+          "mqtt_topic": "wican/ev3/tyres",
+          "wake_voltage": 13.4,
+          "custom_pid_init": "",
+          "custom_pid_mode": "",
+          "custom_pid_expr": "A",
+          "custom_pid_operator": "greater",
+          "custom_pid_value": 0
+        },
+        {
+          "group_name": "730 22F010",
+          "init": "ATAR; ATSH730; ATCRA738;",
+          "period": 5000,
+          "condition": "always",
+          "enabled": false,
+          "pids": [
+            {
+              "pid": "22F010",
+              "pid_description": "STEER_ANGLE",
+              "enabled": false,
+              "_collapsed": false,
+              "parameters": [
+                {
+                  "name": "STEER_ANGLE",
+                  "expression": "((S20)*256+B19)/10",
+                  "unit": "deg",
+                  "class": "",
+                  "min": -720,
+                  "max": 720,
+                  "destination_type": "MQTT_Grp",
+                  "send_to": "wican/ev3/group11",
+                  "onchange": false,
+                  "enabled": false
+                }
+              ]
+            }
+          ],
+          "_collapsed": false,
+          "wake_voltage": 13.4,
+          "custom_pid_init": "",
+          "custom_pid_mode": "",
+          "custom_pid_expr": "A",
+          "custom_pid_operator": "greater",
+          "custom_pid_value": 0
+        },
+        {
+          "group_name": "HVAC 7B3 220100 and 2",
+          "init": "ATAR; ATSH7B3; ATCRA7BB;",
+          "period": 1200,
+          "condition": "always",
+          "enabled": true,
+          "pids": [
+            {
+              "pid": "220100",
+              "pid_description": "hvac 220100",
+              "enabled": true,
+              "_collapsed": false,
+              "parameters": [
+                {
+                  "name": "SPEED",
+                  "expression": "B38",
+                  "unit": "km/h",
+                  "class": "speed",
+                  "min": "",
+                  "max": "",
+                  "destination_type": "MQTT_Grp",
+                  "send_to": "",
+                  "onchange": false,
+                  "enabled": true
+                },
+                {
+                  "name": "TMP_A",
+                  "expression": "(B12/2)-40",
+                  "unit": "°C",
+                  "enabled": true,
+                  "onchange": false,
+                  "destination_type": "MQTT_Grp"
+                },
+                {
+                  "name": "T_CAB",
+                  "expression": "(B11/2)-40",
+                  "unit": "°C",
+                  "enabled": true,
+                  "onchange": false,
+                  "destination_type": "MQTT_Grp",
+                  "class": "temperature"
+                },
+                {
+                  "name": "INT_HUMIDITY",
+                  "expression": "B37/2",
+                  "unit": "%",
+                  "enabled": true,
+                  "onchange": false,
+                  "destination_type": "MQTT_Grp",
+                  "send_to": "",
+                  "class": "humidity"
+                }
+              ]
+            },
+            {
+              "pid": "220102",
+              "pid_description": "hvac 220102",
+              "enabled": true,
+              "_collapsed": true,
+              "parameters": [
+                {
+                  "name": "HVAC_COOLANT_TMP",
+                  "expression": "(B10 - 80)/2",
+                  "unit": "°C",
+                  "enabled": true,
+                  "onchange": false,
+                  "destination_type": "MQTT_Grp",
+                  "class": "temperature"
+                }
+              ]
+            }
+          ],
+          "_collapsed": false,
+          "mqtt_topic": "wican/ev3/hvac",
+          "wake_voltage": 13.4,
+          "custom_pid_init": "",
+          "custom_pid_mode": "",
+          "custom_pid_expr": "A",
+          "custom_pid_operator": "greater",
+          "custom_pid_value": 0
+        },
+        {
+          "group_name": "7B4 22E004",
+          "init": "ATAL; ATSH744; ATCRA74C;",
+          "period": 5000,
+          "condition": "always",
+          "enabled": true,
+          "pids": [
+            {
+              "pid": "22E004",
+              "pid_description": "VCMS_HV_R",
+              "enabled": true,
+              "_collapsed": false,
+              "parameters": [
+                {
+                  "name": "VCMS_HV_R",
+                  "expression": "B10:2",
+                  "unit": "",
+                  "class": "none",
+                  "min": 0,
+                  "max": 1,
+                  "destination_type": "MQTT_Grp",
+                  "send_to": "",
+                  "onchange": false,
+                  "enabled": true
+                }
+              ]
+            }
+          ],
+          "_collapsed": false,
+          "mqtt_topic": "wican/ev3/relays",
+          "wake_voltage": 13.4,
+          "custom_pid_init": "",
+          "custom_pid_mode": "",
+          "custom_pid_expr": "A",
+          "custom_pid_operator": "greater",
+          "custom_pid_value": 0
+        },
+        {
+          "group_name": "BMS 7E4 220101",
+          "init": "ATAL; ATSH7E4; ATCRA7EC;",
+          "period": 500,
+          "condition": "always",
+          "enabled": true,
+          "pids": [
+            {
+              "pid": "220101",
+              "pid_description": "SOC",
+              "enabled": true,
+              "_collapsed": false,
+              "parameters": [
+                {
+                  "name": "SOC",
+                  "expression": "B10/2",
+                  "unit": "%",
+                  "class": "battery",
+                  "min": 0,
+                  "max": 100,
+                  "destination_type": "MQTT_Grp",
+                  "send_to": "",
+                  "onchange": false,
+                  "enabled": true
+                },
+                {
+                  "name": "HV_V",
+                  "expression": "[B19:B20]/10",
+                  "unit": "V",
+                  "enabled": true,
+                  "onchange": false,
+                  "destination_type": "MQTT_Grp",
+                  "class": "voltage",
+                  "min": "200",
+                  "max": "480"
+                },
+                {
+                  "name": "HV_W",
+                  "expression": "([B19:B20]/10)*((S17*256)+B18)/10",
+                  "unit": "W",
+                  "enabled": true,
+                  "onchange": false,
+                  "destination_type": "MQTT_Grp",
+                  "class": "power"
+                },
+                {
+                  "name": "LV_V",
+                  "expression": "B38*0.1",
+                  "unit": "V",
+                  "enabled": true,
+                  "onchange": false,
+                  "destination_type": "MQTT_Grp",
+                  "class": "battery"
+                },
+                {
+                  "name": "HV_AH_CHARGED",
+                  "expression": "((B39<<24)+(B41<<16)+(B42<<8)+B43)/10",
+                  "unit": "Ah",
+                  "enabled": true,
+                  "onchange": false,
+                  "destination_type": "MQTT_Grp",
+                  "max": "1000000",
+                  "min": "1",
+                  "send_to": ""
+                },
+                {
+                  "name": "HV_AH_DISCHARGED",
+                  "expression": "((B44<<24)+(B45<<16)+(B46<<8)+B47)/10",
+                  "unit": "Ah",
+                  "enabled": true,
+                  "onchange": false,
+                  "destination_type": "MQTT_Grp",
+                  "min": "1",
+                  "max": "1000000"
+                },
+                {
+                  "name": "KWH_CHARGED",
+                  "expression": "((B49<<24)+(B50<<16)+(B51<<8)+B52)/10",
+                  "unit": "kWh",
+                  "enabled": true,
+                  "onchange": false,
+                  "destination_type": "MQTT_Grp",
+                  "class": "battery",
+                  "min": "1",
+                  "max": "1000000"
+                },
+                {
+                  "name": "KWH_DISCHARGED",
+                  "expression": "((B53<<24)+(B54<<16)+(B55<<8)+B57)/10",
+                  "unit": "kWh",
+                  "enabled": true,
+                  "onchange": false,
+                  "destination_type": "MQTT_Grp",
+                  "min": "1",
+                  "max": "1000000"
+                },
+                {
+                  "name": "DM_R_RPM",
+                  "expression": "((S36)*256)+B37",
+                  "unit": "rpm",
+                  "enabled": true,
+                  "onchange": false,
+                  "destination_type": "MQTT_Grp",
+                  "min": "-10100",
+                  "max": "10100"
+                },
+                {
+                  "name": "ISOLATION_RES",
+                  "expression": "((B70<<8)+B71)",
+                  "unit": "kΩ",
+                  "enabled": true,
+                  "onchange": false,
+                  "destination_type": "MQTT_Grp",
+                  "min": "10",
+                  "max": "5000"
+                },
+                {
+                  "name": "OP_TIME",
+                  "expression": "((B58<<24)+(B59<<16)+(B60<<8)+B61)/3600",
+                  "unit": "hours",
+                  "enabled": true,
+                  "onchange": false,
+                  "destination_type": "MQTT_Grp",
+                  "min": "1",
+                  "max": "1000000"
+                },
+                {
+                  "name": "CHARGING_R_A",
+                  "expression": "([B13:B14])/10",
+                  "unit": "A",
+                  "enabled": true,
+                  "onchange": false,
+                  "destination_type": "MQTT_Grp",
+                  "class": "current",
+                  "min": "0",
+                  "max": "200"
+                },
+                {
+                  "name": "HV_A",
+                  "expression": "((S17*256)+B18)/10",
+                  "unit": "A",
+                  "enabled": true,
+                  "onchange": false,
+                  "destination_type": "MQTT_Grp",
+                  "class": "current"
+                },
+                {
+                  "name": "B43",
+                  "expression": "B43",
+                  "unit": "",
+                  "enabled": true,
+                  "onchange": false,
+                  "destination_type": "Default"
+                },
+                {
+                  "name": "B50",
+                  "expression": "B50",
+                  "unit": "",
+                  "enabled": true,
+                  "onchange": false,
+                  "destination_type": "Default"
+                },
+                {
+                  "name": "RAW",
+                  "expression": "raw",
+                  "unit": "",
+                  "enabled": true,
+                  "onchange": false,
+                  "destination_type": "Default"
+                },
+                {
+                  "name": "IS_CHARGING",
+                  "expression": "B17 / 15",
+                  "unit": "",
+                  "enabled": true,
+                  "onchange": false,
+                  "destination_type": "Default"
+                }
+              ]
+            }
+          ],
+          "_collapsed": false,
+          "mqtt_topic": "wican/ev3/bms220101",
+          "wake_voltage": 13.4,
+          "custom_pid_init": "",
+          "custom_pid_mode": "",
+          "custom_pid_expr": "A",
+          "custom_pid_operator": "greater",
+          "custom_pid_value": 0
+        },
+        {
+          "group_name": "BMS 7E4 220101 and 5   Cell_T + Charge",
+          "mqtt_topic": "wican/ev3/celltemp_batstatus",
+          "enabled": true,
+          "condition": "always",
+          "period": 6500,
+          "pids": [
+            {
+              "pid": "220101",
+              "pid_description": "HV_T_MAX",
+              "enabled": true,
+              "_collapsed": true,
+              "parameters": [
+                {
+                  "name": "HV_T_MAX",
+                  "expression": "(S21)",
+                  "unit": "°C",
+                  "class": "temperature",
+                  "min": "",
+                  "max": "",
+                  "destination_type": "MQTT_Grp",
+                  "send_to": "",
+                  "onchange": false,
+                  "enabled": true
+                },
+                {
+                  "name": "HV_T_MIN",
+                  "expression": "(S22)",
+                  "unit": "°C",
+                  "enabled": true,
+                  "onchange": false,
+                  "destination_type": "MQTT_Grp",
+                  "class": "temperature"
+                },
+                {
+                  "name": "HV_T_1",
+                  "expression": "(S23)",
+                  "unit": "°C",
+                  "enabled": true,
+                  "onchange": false,
+                  "destination_type": "MQTT_Grp",
+                  "class": "temperature"
+                },
+                {
+                  "name": "HV_T_2",
+                  "expression": "(S25)",
+                  "unit": "°C",
+                  "enabled": true,
+                  "onchange": false,
+                  "destination_type": "MQTT_Grp",
+                  "class": "temperature"
+                },
+                {
+                  "name": "HV_T_3",
+                  "expression": "(S26)",
+                  "unit": "°C",
+                  "enabled": true,
+                  "onchange": false,
+                  "destination_type": "MQTT_Grp",
+                  "class": "temperature"
+                },
+                {
+                  "name": "HV_T_4",
+                  "expression": "(S27)",
+                  "unit": "°C",
+                  "enabled": true,
+                  "onchange": false,
+                  "destination_type": "MQTT_Grp",
+                  "class": "temperature"
+                },
+                {
+                  "name": "HV_T_5",
+                  "expression": "(S28)",
+                  "unit": "°C",
+                  "enabled": true,
+                  "onchange": false,
+                  "destination_type": "MQTT_Grp",
+                  "class": "temperature"
+                }
+              ]
+            },
+            {
+              "pid": "220105",
+              "pid_description": "HV_T_6",
+              "enabled": true,
+              "_collapsed": true,
+              "parameters": [
+                {
+                  "name": "HV_T_6",
+                  "expression": "(S15)",
+                  "unit": "°C",
+                  "class": "temperature",
+                  "min": "",
+                  "max": "",
+                  "destination_type": "MQTT_Grp",
+                  "send_to": "",
+                  "onchange": false,
+                  "enabled": true
+                },
+                {
+                  "name": "HV_T_7",
+                  "expression": "(S17)",
+                  "unit": "°C",
+                  "enabled": true,
+                  "onchange": false,
+                  "destination_type": "MQTT_Grp",
+                  "send_to": "",
+                  "class": "temperature",
+                  "min": "",
+                  "max": ""
+                },
+                {
+                  "name": "HV_T_8",
+                  "expression": "(S18)",
+                  "unit": "°C",
+                  "enabled": true,
+                  "onchange": false,
+                  "destination_type": "MQTT_Grp",
+                  "class": "temperature"
+                },
+                {
+                  "name": "HV_T_9",
+                  "expression": "(S19)",
+                  "unit": "°C",
+                  "enabled": true,
+                  "onchange": false,
+                  "destination_type": "MQTT_Grp",
+                  "class": "temperature"
+                },
+                {
+                  "name": "HV_T_10",
+                  "expression": "(S21)",
+                  "unit": "°C",
+                  "enabled": true,
+                  "onchange": false,
+                  "destination_type": "MQTT_Grp",
+                  "class": "temperature"
+                },
+                {
+                  "name": "HV_T_11",
+                  "expression": "(S21)",
+                  "unit": "°C",
+                  "enabled": true,
+                  "onchange": false,
+                  "destination_type": "MQTT_Grp",
+                  "class": "temperature"
+                },
+                {
+                  "name": "HV_T_12",
+                  "expression": "(S50)",
+                  "unit": "°C",
+                  "enabled": true,
+                  "onchange": false,
+                  "destination_type": "MQTT_Grp",
+                  "class": "temperature"
+                },
+                {
+                  "name": "HV_T_13",
+                  "expression": "(S50)",
+                  "unit": "°C",
+                  "enabled": true,
+                  "onchange": false,
+                  "destination_type": "MQTT_Grp",
+                  "class": "temperature"
+                },
+                {
+                  "name": "HV_T_14",
+                  "expression": "(S51)",
+                  "unit": "°C",
+                  "enabled": true,
+                  "onchange": false,
+                  "destination_type": "MQTT_Grp",
+                  "class": "temperature"
+                },
+                {
+                  "name": "HV_T_15",
+                  "expression": "(S52)",
+                  "unit": "°C",
+                  "enabled": true,
+                  "onchange": false,
+                  "destination_type": "MQTT_Grp",
+                  "class": "temperature"
+                },
+                {
+                  "name": "HV_T_16",
+                  "expression": "(S53)",
+                  "unit": "°C",
+                  "enabled": true,
+                  "onchange": false,
+                  "destination_type": "MQTT_Grp",
+                  "class": "temperature"
+                },
+                {
+                  "name": "SOH",
+                  "expression": "[B34:B35]/10",
+                  "unit": "%",
+                  "enabled": true,
+                  "onchange": false,
+                  "destination_type": "MQTT_Grp",
+                  "min": "0",
+                  "max": "105"
+                },
+                {
+                  "name": "BATT_HEAT",
+                  "expression": "B31",
+                  "unit": "°C",
+                  "enabled": true,
+                  "onchange": false,
+                  "destination_type": "MQTT_Grp",
+                  "class": "temperature",
+                  "min": "-60",
+                  "max": "99"
+                },
+                {
+                  "name": "REGEN_MAX",
+                  "expression": "((B23<<8)+B25)/100",
+                  "unit": "kW",
+                  "enabled": true,
+                  "onchange": false,
+                  "destination_type": "MQTT_Grp",
+                  "class": "power"
+                },
+                {
+                  "name": "POWER_MAX",
+                  "expression": "[B26:B27]/100",
+                  "unit": "kW",
+                  "enabled": true,
+                  "onchange": false,
+                  "destination_type": "MQTT_Grp",
+                  "class": "power"
+                },
+                {
+                  "name": "HV_KWH_R",
+                  "expression": "((B37 << 8) + B38) *0.002",
+                  "unit": "KWh",
+                  "enabled": true,
+                  "onchange": false,
+                  "destination_type": "MQTT_Grp",
+                  "class": "battery"
+                },
+                {
+                  "name": "SOC_D",
+                  "expression": "B41/2",
+                  "unit": "%",
+                  "enabled": true,
+                  "onchange": false,
+                  "destination_type": "MQTT_Grp",
+                  "class": "battery",
+                  "min": "0",
+                  "max": "105"
+                }
+              ]
+            }
+          ],
+          "_collapsed": false,
+          "init": "ATAL; ATSH7E4; ATCRA7EC; ATST32;",
+          "wake_voltage": 13.4,
+          "custom_pid_init": "",
+          "custom_pid_mode": "",
+          "custom_pid_expr": "A",
+          "custom_pid_operator": "greater",
+          "custom_pid_value": 0
+        },
+        {
+          "group_name": "BMS 7E4 220102 to 4  Cell Voltages",
+          "init": "ATAL; ATSH7E4; ATCRA7EC; ATST32;",
+          "period": 11200,
+          "condition": "always",
+          "enabled": true,
+          "pids": [
+            {
+              "pid": "220101",
+              "pid_description": "HV_C_V_MAX",
+              "enabled": true,
+              "_collapsed": true,
+              "parameters": [
+                {
+                  "name": "HV_C_V_MAX",
+                  "expression": "B31/50",
+                  "unit": "V",
+                  "class": "voltage",
+                  "min": "",
+                  "max": "",
+                  "destination_type": "MQTT_Grp",
+                  "send_to": "",
+                  "onchange": false,
+                  "enabled": true
+                },
+                {
+                  "name": "HV_C_V_MIN",
+                  "expression": "B34/50",
+                  "unit": "V",
+                  "enabled": true,
+                  "onchange": false,
+                  "destination_type": "MQTT_Grp",
+                  "class": "voltage"
+                },
+                {
+                  "name": "HV_C_V_MAX_NO",
+                  "expression": "B33",
+                  "unit": "",
+                  "enabled": true,
+                  "onchange": false,
+                  "destination_type": "MQTT_Grp"
+                },
+                {
+                  "name": "HV_C_V_MIN_NO",
+                  "expression": "B35",
+                  "unit": "",
+                  "enabled": true,
+                  "onchange": false,
+                  "destination_type": "MQTT_Grp"
+                }
+              ]
+            },
+            {
+              "pid": "220102",
+              "pid_description": "Cell voltages 1 - 32",
+              "enabled": true,
+              "_collapsed": true,
+              "parameters": [
+                {
+                  "name": "raw01",
+                  "expression": "raw",
+                  "unit": "",
+                  "enabled": true,
+                  "onchange": false,
+                  "destination_type": "MQTT_Grp"
+                }
+              ]
+            },
+            {
+              "pid": "220103",
+              "pid_description": "Cell voltages 33 - 64",
+              "enabled": true,
+              "_collapsed": true,
+              "parameters": [
+                {
+                  "name": "raw02",
+                  "expression": "raw",
+                  "unit": "",
+                  "class": "",
+                  "min": "",
+                  "max": "",
+                  "destination_type": "MQTT_Grp",
+                  "send_to": "",
+                  "onchange": false,
+                  "enabled": true
+                }
+              ]
+            },
+            {
+              "pid": "220104",
+              "pid_description": "Cell voltages 64 - 93",
+              "enabled": true,
+              "_collapsed": true,
+              "parameters": [
+                {
+                  "name": "raw03",
+                  "expression": "raw",
+                  "unit": "",
+                  "class": "",
+                  "min": "",
+                  "max": "",
+                  "destination_type": "MQTT_Grp",
+                  "send_to": "",
+                  "onchange": false,
+                  "enabled": true
+                }
+              ]
+            }
+          ],
+          "mqtt_topic": "wican/ev3/cellvoltages",
+          "_collapsed": false,
+          "wake_voltage": 13.4,
+          "custom_pid_init": "",
+          "custom_pid_mode": "",
+          "custom_pid_expr": "A",
+          "custom_pid_operator": "greater",
+          "custom_pid_value": 0
+        },
+        {
+          "group_name": "BMS 7E4 220106 ",
+          "init": "ATAL;ATSH7E4;ATCRA7EC;",
+          "period": 5000,
+          "condition": "always",
+          "enabled": true,
+          "pids": [
+            {
+              "pid": "220106",
+              "pid_description": "BMS_COOLANT_TMP",
+              "enabled": true,
+              "_collapsed": false,
+              "parameters": [
+                {
+                  "name": "BMS_COOLANT_TMP",
+                  "expression": "(S10)",
+                  "unit": "°C",
+                  "class": "temperature",
+                  "min": "",
+                  "max": "",
+                  "destination_type": "MQTT_Grp",
+                  "send_to": "",
+                  "onchange": false,
+                  "enabled": true
+                }
+              ]
+            }
+          ],
+          "_collapsed": true,
+          "mqtt_topic": "wican/ev3/bms220106",
+          "wake_voltage": 13.4,
+          "custom_pid_init": "",
+          "custom_pid_mode": "",
+          "custom_pid_expr": "A",
+          "custom_pid_operator": "greater",
+          "custom_pid_value": 0
+        }
+      ],
+      "home_assistant_yaml": [
+        "mqtt:",
+        "  binary_sensor:",
+        "",
+        "  - name: \"VCMS_HV_R\"",
+        "    unique_id: \"wican_9c139e8f5a35_VCMS_HV_R\"",
+        "    state_topic: \"wican/ev3/relays\"",
+        "    device_class: power",
+        "    payload_on: \"closed\"",
+        "    payload_off: \"open\"",
+        "    value_template: >",
+        "          {% if value_json is defined and value_json.VCMS_HV_R is defined %}",
+        "            {{ 'closed' if value_json.VCMS_HV_R == 1 else 'open' }}",
+        "          {% else %}",
+        "            {{ states('binary_sensor.wican_9c139e8f5a35_vcms_hv_r') }}",
+        "          {% endif %}",
+        "    device: &wican_device",
+        "      identifiers: \"wican-EV3\"",
+        "      name: \"wican-EV3\"",
+        "      model: \"wican pro\"",
+        "      manufacturer: \"meatpi\"",
+        "",
+        "  sensor:",
+        "",
+        "  - name: \"SOC\"",
+        "    unique_id: \"wican_9c139e8f5a35_SOC\"",
+        "    state_topic: \"wican/ev3/bms220101\"",
+        "    unit_of_measurement: \"%\"",
+        "    device_class: battery",
+        "    state_class: measurement",
+        "    suggested_display_precision: 1",
+        "    value_template: >",
+        "      {% if value_json is defined and value_json.SOC is defined %}",
+        "        {{ value_json.SOC }}",
+        "      {% elif this.state is defined and is_number(this.state) %}",
+        "        {{ this.state }}",
+        "      {% else %}",
+        "        {{ None }}",
+        "      {% endif %}  ",
+        "    json_attributes_topic: \"wican/ev3/bms220101\"",
+        "    json_attributes_template: >",
+        "      {% if value_json is defined and value_json.timestamp is defined %}",
+        "        {{ {'data_timestamp': (value_json.timestamp | as_datetime | as_local).strftime('%Y-%m-%d %H:%M:%S')} | tojson }}",
+        "      {% else %}",
+        "        {{ {} | tojson }}",
+        "      {% endif %}",
+        "    device: *wican_device",
+        "",
+        "  - name: \"HV_C_V_MIN\"",
+        "    unique_id: \"wican_9c139e8f5a35_hv_cv_min\"",
+        "    state_topic: \"wican/ev3/cellvoltages\"",
+        "    unit_of_measurement: \"V\"",
+        "    device_class: \"voltage\"",
+        "    state_class: \"measurement\"",
+        "    suggested_display_precision: 1",
+        "    value_template: >",
+        "      {% if value_json is defined and value_json.HV_C_V_MIN is defined %}",
+        "        {{ value_json.HV_C_V_MIN }}",
+        "      {% elif this.state is defined and is_number(this.state) %}",
+        "        {{ this.state }}",
+        "      {% else %}",
+        "        {{ None }}",
+        "      {% endif %}  ",
+        "    json_attributes_topic: \"wican/ev3/cellvoltages\"",
+        "    json_attributes_template: >",
+        "      {% if value_json is defined and value_json.timestamp is defined %}",
+        "        {{ {'data_timestamp': (value_json.timestamp | as_datetime | as_local).strftime('%Y-%m-%d %H:%M:%S')} | tojson }}",
+        "      {% else %}",
+        "        {{ {} | tojson }}",
+        "      {% endif %}",
+        "    device: *wican_device",
+        "",
+        "  - name: \"HV_C_V_MAX\"",
+        "    unique_id: \"wican_9c139e8f5a35_hv_cv_max\"",
+        "    state_topic: \"wican/ev3/cellvoltages\"",
+        "    unit_of_measurement: \"V\"",
+        "    device_class: \"voltage\"",
+        "    state_class: \"measurement\"",
+        "    suggested_display_precision: 1",
+        "    value_template: >",
+        "      {% if value_json is defined and value_json.HV_C_V_MAX is defined %}",
+        "        {{ value_json.HV_C_V_MAX }}",
+        "      {% elif this.state is defined and is_number(this.state) %}",
+        "        {{ this.state }}",
+        "      {% else %}",
+        "        {{ None }}",
+        "      {% endif %}  ",
+        "    json_attributes_topic: \"wican/ev3/cellvoltages\"",
+        "    json_attributes_template: >",
+        "      {% if value_json is defined and value_json.timestamp is defined %}",
+        "        {{ {'data_timestamp': (value_json.timestamp | as_datetime | as_local).strftime('%Y-%m-%d %H:%M:%S')} | tojson }}",
+        "      {% else %}",
+        "        {{ {} | tojson }}",
+        "      {% endif %}",
+        "    device: *wican_device",
+        "",
+        "  - name: \"Wican EV3 HV Battery Pack\"",
+        "    unique_id: \"sensor.wican_ev3_hv_battery_pack\"",
+        "    state_topic: \"wican/ev3/cellvoltages\"",
+        "    unit_of_measurement: \"V\"",
+        "    state_class: \"measurement\"",
+        "    value_template: >",
+        "      {% if value_json is mapping %}",
+        "        {% set ns = namespace(sum=0, count=0) %}",
+        "        {% set blocks = [",
+        "          {'key': 'raw01', 'start': 1},",
+        "          {'key': 'raw02', 'start': 33},",
+        "          {'key': 'raw03', 'start': 65}",
+        "        ] %}",
+        "        {% for block in blocks %}",
+        "          {% if value_json[block.key] is defined %}",
+        "            {% set raw = value_json[block.key] %}",
+        "            {% set cell_data = raw[14:] %}",
+        "            {% for i in range(0, cell_data | length - 4, 2) %}",
+        "              {% set hex_byte = cell_data[i:i+2] %}",
+        "              {% if hex_byte | length == 2 and hex_byte not in ['AA', 'FF'] %}",
+        "                {% set cell_num = block.start + (i // 2) %}",
+        "                {% if cell_num <= 93 %}",
+        "                  {% set volt = ((hex_byte | int(base=16, default=0)) / 50) | round(2) %}",
+        "                  {% set ns.sum = ns.sum + volt %}",
+        "                  {% set ns.count = ns.count + 1 %}",
+        "                {% endif %}",
+        "              {% endif %}",
+        "            {% endfor %}",
+        "          {% endif %}",
+        "        {% endfor %}",
+        "        {{ (ns.sum / ns.count) | round(2) if ns.count > 0 else '0' }}",
+        "      {% else %}",
+        "        {{ states('sensor.wican_ev3_hv_battery_pack') }}",
+        "      {% endif %}",
+        "    json_attributes_topic: \"wican/ev3/cellvoltages\"",
+        "    json_attributes_template: >",
+        "      {% if value_json is mapping %}",
+        "        {% set ns = namespace(cells={}, sum=0, count=0) %}",
+        "        {% set blocks = [",
+        "          {'key': 'raw01', 'start': 1},",
+        "          {'key': 'raw02', 'start': 33},",
+        "          {'key': 'raw03', 'start': 65}",
+        "        ] %}",
+        "        {% for block in blocks %}",
+        "          {% if value_json[block.key] is defined %}",
+        "            {% set raw = value_json[block.key] %}",
+        "            {% set cell_data = raw[14:] %}",
+        "            {% for i in range(0, cell_data | length - 4, 2) %}",
+        "              {% set hex_byte = cell_data[i:i+2] %}",
+        "              {% if hex_byte | length == 2 and hex_byte not in ['AA', 'FF'] %}",
+        "                {% set cell_num = block.start + (i // 2) %}",
+        "                {% if cell_num <= 93 %}",
+        "                  {% set volt = ((hex_byte | int(base=16, default=0)) / 50) | round(2) %}",
+        "                  {% set key = 'v' ~ '%02d' | format(cell_num) %}",
+        "                  {% set ns.cells = dict(ns.cells, **{key: volt}) %}",
+        "                  {% set ns.sum = ns.sum + volt %}",
+        "                  {% set ns.count = ns.count + 1 %}",
+        "                {% endif %}",
+        "              {% endif %}",
+        "            {% endfor %}",
+        "          {% endif %}",
+        "        {% endfor %}",
+        "        {% set avg = (ns.sum / ns.count) | round(2) if ns.count > 0 else 0 %}",
+        "        {{ dict(ns.cells, average_voltage=avg) | tojson }}",
+        "      {% else %}",
+        "        {{ {} | tojson }}",
+        "      {% endif %}",
+        "    device: *wican_device",
+        "",
+        "  - name: \"HV_T_MIN\"",
+        "    unique_id: \"wican_9c139e8f5a35_hv_t_min\"",
+        "    state_topic: \"wican/ev3/celltemp_batstatus\"",
+        "    unit_of_measurement: °C",
+        "    device_class: temperature",
+        "    state_class: \"measurement\"",
+        "    suggested_display_precision: 1",
+        "    value_template: >",
+        "      {% if value_json is defined and value_json.HV_T_MIN is defined %}",
+        "        {{ value_json.HV_T_MIN }}",
+        "      {% elif this.state is defined and is_number(this.state) %}",
+        "        {{ this.state }}",
+        "      {% else %}",
+        "        {{ None }}",
+        "      {% endif %}  ",
+        "    json_attributes_topic: \"wican/ev3/celltemp_batstatus\"",
+        "    json_attributes_template: >",
+        "      {% if value_json is defined and value_json.timestamp is defined %}",
+        "        {{ {'data_timestamp': (value_json.timestamp | as_datetime | as_local).strftime('%Y-%m-%d %H:%M:%S')} | tojson }}",
+        "      {% else %}",
+        "        {{ {} | tojson }}",
+        "      {% endif %}",
+        "    device: *wican_device",
+        "",
+        "  - name: \"HV_T_MAX\"",
+        "    unique_id: \"wican_9c139e8f5a35_hv_t_max\"",
+        "    state_topic: \"wican/ev3/celltemp_batstatus\"",
+        "    unit_of_measurement: °C",
+        "    device_class: temperature",
+        "    state_class: \"measurement\"",
+        "    suggested_display_precision: 1",
+        "    value_template: >",
+        "      {% if value_json is defined and value_json.HV_T_MAX is defined %}",
+        "        {{ value_json.HV_T_MAX }}",
+        "      {% else %}",
+        "        {{ None }}",
+        "      {% endif %}  ",
+        "    json_attributes_topic: \"wican/ev3/celltemp_batstatus\"",
+        "    json_attributes_template: >",
+        "      {% if value_json is defined and value_json.timestamp is defined %}",
+        "        {{ {'data_timestamp': (value_json.timestamp | as_datetime | as_local).strftime('%Y-%m-%d %H:%M:%S')} | tojson }}",
+        "      {% else %}",
+        "        {{ {} | tojson }}",
+        "      {% endif %}",
+        "    device: *wican_device",
+        "",
+        "  - name: \"wican_ev3_hv_cell_temps\"",
+        "    unique_id: \"sensor.wican_ev3_hv_cell_temps\"",
+        "    state_topic: \"wican/ev3/celltemp_batstatus\"",
+        "    unit_of_measurement: \"°C\"",
+        "    device_class: temperature",
+        "    state_class: \"measurement\"",
+        "    suggested_display_precision: 1",
+        "    value_template: >",
+        "      {% if value_json is mapping %}",
+        "        {% set ns = namespace(sum=0, count=0) %}",
+        "        {% for i in range(1, 17) %}",
+        "          {% set key = 'HV_T_' ~ i %}",
+        "          {% if value_json[key] is defined and is_number(value_json[key]) %}",
+        "            {% set ns.sum = ns.sum + value_json[key] | float %}",
+        "            {% set ns.count = ns.count + 1 %}",
+        "          {% endif %}",
+        "        {% endfor %}",
+        "        {{ (ns.sum / ns.count) | round(1) if ns.count > 0 else states('sensor.wican_ev3_hv_cell_temps') }}",
+        "      {% else %}",
+        "        {{ states('sensor.wican_ev3_hv_cell_temps') }}",
+        "      {% endif %}",
+        "    json_attributes_topic: \"wican/ev3/celltemp_batstatus\"",
+        "    json_attributes_template: >",
+        "      {% if value_json is mapping %}",
+        "        {% set ns = namespace(temps={}, sum=0, count=0) %}",
+        "        {% for i in range(1, 17) %}",
+        "          {% set json_key = 'HV_T_' ~ i %}",
+        "          {% if value_json[json_key] is defined and is_number(value_json[json_key]) %}",
+        "            {% set val = value_json[json_key] | float | round(1) %}",
+        "            {% set attr_key = 't' ~ '%02d' | format(i) %}",
+        "            {% set ns.temps = dict(ns.temps, **{attr_key: val}) %}",
+        "            {% set ns.sum = ns.sum + val %}",
+        "            {% set ns.count = ns.count + 1 %}",
+        "          {% endif %}",
+        "        {% endfor %}",
+        "        {% set avg = (ns.sum / ns.count) | round(1) if ns.count > 0 else 0 %}",
+        "        {% set base = dict(ns.temps, average_temp=avg) %}",
+        "        {% if value_json.timestamp is defined %}",
+        "          {% set ts = (value_json.timestamp | as_datetime | as_local).strftime('%Y-%m-%d %H:%M:%S') %}",
+        "          {% set base = dict(base, data_timestamp=ts) %}",
+        "        {% endif %}",
+        "        {{ base | tojson }}",
+        "      {% else %}",
+        "        {{ {} | tojson }}",
+        "      {% endif %}",
+        "    device: *wican_device",
+        "",
+        "",
+        "  - name: \"CHARGING_R_A\"",
+        "    unique_id: \"wican_9c139e8f5a35_CHARGING_R_A\"",
+        "    state_topic: \"wican/ev3/bms220101\"",
+        "    unit_of_measurement: \"A\"",
+        "    device_class: \"current\"",
+        "    state_class: \"measurement\"",
+        "    suggested_display_precision: 1",
+        "    value_template: >",
+        "      {% if value_json is defined and value_json.CHARGING_R_A is defined %}",
+        "        {{ value_json.CHARGING_R_A }}",
+        "      {% elif this.state is defined and is_number(this.state) %}",
+        "        {{ this.state }}",
+        "      {% else %}",
+        "        {{ None }}",
+        "      {% endif %}  ",
+        "    json_attributes_topic: \"wican/ev3/bms220101\"",
+        "    json_attributes_template: >",
+        "      {% if value_json is defined and value_json.timestamp is defined %}",
+        "        {{ {'data_timestamp': (value_json.timestamp | as_datetime | as_local).strftime('%Y-%m-%d %H:%M:%S')} | tojson }}",
+        "      {% else %}",
+        "        {{ {} | tojson }}",
+        "      {% endif %}",
+        "    device: *wican_device",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "  - name: \"HV_A\"",
+        "    unique_id: \"wican_9c139e8f5a35_HV_A\"",
+        "    state_topic: \"wican/ev3/bms220101\"",
+        "    unit_of_measurement: \"A\"",
+        "    device_class: current",
+        "    state_class: measurement",
+        "    value_template: >",
+        "      {% if value_json is defined and value_json.HV_A is defined %}",
+        "        {{ value_json.HV_A }}",
+        "      {% elif this.state is defined and is_number(this.state) %}",
+        "        {{ this.state }}",
+        "      {% else %}",
+        "        {{ None }}",
+        "      {% endif %}  ",
+        "    json_attributes_topic: \"wican/ev3/bms220101\"",
+        "    json_attributes_template: >",
+        "      {% if value_json is defined and value_json.timestamp is defined %}",
+        "        {{ {'data_timestamp': (value_json.timestamp | as_datetime | as_local).strftime('%Y-%m-%d %H:%M:%S')} | tojson }}",
+        "      {% else %}",
+        "        {{ {} | tojson }}",
+        "      {% endif %}",
+        "    device: *wican_device",
+        "",
+        "  - name: \"HV_W\"",
+        "    unique_id: \"wican_9c139e8f5a35_HV_W\"",
+        "    state_topic: \"wican/ev3/bms220101\"",
+        "    unit_of_measurement: \"W\"",
+        "    device_class: power",
+        "    state_class: measurement",
+        "    value_template: >",
+        "      {% if value_json is defined and value_json.HV_W is defined %}",
+        "        {{ value_json.HV_W }}",
+        "      {% elif this.state is defined and is_number(this.state) %}",
+        "        {{ this.state }}",
+        "      {% else %}",
+        "        {{ None }}",
+        "      {% endif %}  ",
+        "    json_attributes_topic: \"wican/ev3/bms220101\"",
+        "    json_attributes_template: >",
+        "      {% if value_json is defined and value_json.timestamp is defined %}",
+        "        {{ {'data_timestamp': (value_json.timestamp | as_datetime | as_local).strftime('%Y-%m-%d %H:%M:%S')} | tojson }}",
+        "      {% else %}",
+        "        {{ {} | tojson }}",
+        "      {% endif %}",
+        "    device: *wican_device",
+        "",
+        "",
+        "  - name: \"SPEED\"",
+        "    unique_id: \"wican_9c139e8f5a35_speed\"",
+        "    state_topic: \"wican/ev3/hvac\"",
+        "    unit_of_measurement: \"km/h\"",
+        "    device_class: speed",
+        "    state_class: measurement",
+        "    suggested_display_precision: 0",
+        "    value_template: >",
+        "      {% if value_json is defined and value_json.SPEED is defined %}",
+        "        {{ value_json.SPEED }}",
+        "      {% elif this.state is defined and is_number(this.state) %}",
+        "        {{ this.state }}",
+        "      {% else %}",
+        "        {{ None }}",
+        "      {% endif %}  ",
+        "    json_attributes_topic: \"wican/ev3/hvac\"",
+        "    json_attributes_template: >",
+        "      {% if value_json is defined and value_json.timestamp is defined %}",
+        "        {{ {'data_timestamp': (value_json.timestamp | as_datetime | as_local).strftime('%Y-%m-%d %H:%M:%S')} | tojson }}",
+        "      {% else %}",
+        "        {{ {} | tojson }}",
+        "      {% endif %}",
+        "    device: *wican_device",
+        "",
+        "  - name: \"TMP_A\"",
+        "    unique_id: \"wican_9c139e8f5a35_tmp_a\"",
+        "    state_topic: \"wican/ev3/hvac\"",
+        "    unit_of_measurement: °C",
+        "    device_class: temperature",
+        "    state_class: \"measurement\"",
+        "    suggested_display_precision: 1",
+        "    value_template: >",
+        "      {% if value_json is defined and value_json.TMP_A is defined %}",
+        "        {{ value_json.TMP_A }}",
+        "      {% elif this.state is defined and is_number(this.state) %}",
+        "        {{ this.state }}",
+        "      {% else %}",
+        "        {{ None }}",
+        "      {% endif %}  ",
+        "    json_attributes_topic: \"wican/ev3/hvac\"",
+        "    json_attributes_template: >",
+        "      {% if value_json is defined and value_json.timestamp is defined %}",
+        "        {{ {'data_timestamp': (value_json.timestamp | as_datetime | as_local).strftime('%Y-%m-%d %H:%M:%S')} | tojson }}",
+        "      {% else %}",
+        "        {{ {} | tojson }}",
+        "      {% endif %}",
+        "    device: *wican_device",
+        "",
+        "  - name: \"HVAC_COOLANT_TMP\"",
+        "    unique_id: \"wican_9c139e8f5a35_HVAC_COOLANT_TMP\"",
+        "    state_topic: \"wican/ev3/hvac\"",
+        "    unit_of_measurement: °C",
+        "    device_class: temperature",
+        "    state_class: \"measurement\"",
+        "    suggested_display_precision: 1",
+        "    value_template: >",
+        "      {% if value_json is defined and value_json.HVAC_COOLANT_TMP is defined %}",
+        "        {{ value_json.HVAC_COOLANT_TMP }}",
+        "      {% elif this.state is defined and is_number(this.state) %}",
+        "        {{ this.state }}",
+        "      {% else %}",
+        "        {{ None }}",
+        "      {% endif %}  ",
+        "    json_attributes_topic: \"wican/ev3/hvac\"",
+        "    json_attributes_template: >",
+        "      {% if value_json is defined and value_json.timestamp is defined %}",
+        "        {{ {'data_timestamp': (value_json.timestamp | as_datetime | as_local).strftime('%Y-%m-%d %H:%M:%S')} | tojson }}",
+        "      {% else %}",
+        "        {{ {} | tojson }}",
+        "      {% endif %}",
+        "    device: *wican_device",
+        "",
+        "  - name: \"BMS_COOLANT_TMP\"",
+        "    unique_id: \"wican_9c139e8f5a35_BMS_COOLANT_TMP\"",
+        "    state_topic: \"wican/ev3/bms220106\"",
+        "    unit_of_measurement: °C",
+        "    device_class: temperature",
+        "    state_class: \"measurement\"",
+        "    suggested_display_precision: 1",
+        "    value_template: >",
+        "      {% if value_json is defined and value_json.BMS_COOLANT_TMP is defined %}",
+        "        {{ value_json.BMS_COOLANT_TMP }}",
+        "      {% elif this.state is defined and is_number(this.state) %}",
+        "        {{ this.state }}",
+        "      {% else %}",
+        "        {{ None }}",
+        "      {% endif %}   ",
+        "    json_attributes_topic: \"wican/ev3/bms220106\"",
+        "    json_attributes_template: >",
+        "      {% if value_json is defined and value_json.timestamp is defined %}",
+        "        {{ {'data_timestamp': (value_json.timestamp | as_datetime | as_local).strftime('%Y-%m-%d %H:%M:%S')} | tojson }}",
+        "      {% else %}",
+        "        {{ {} | tojson }}",
+        "      {% endif %}",
+        "    device: *wican_device",
+        "",
+        "  - name: \"BATT_HEAT\"",
+        "    unique_id: \"wican_9c139e8f5a35_BATT_HEAT\"",
+        "    state_topic: \"wican/ev3/celltemp_batstatus\"",
+        "    unit_of_measurement: °C",
+        "    device_class: temperature",
+        "    state_class: \"measurement\"",
+        "    suggested_display_precision: 1",
+        "    value_template: >",
+        "      {% if value_json is defined and value_json.BATT_HEAT is defined %}",
+        "        {{ value_json.BATT_HEAT }}",
+        "      {% elif this.state is defined and is_number(this.state) %}",
+        "        {{ this.state }}",
+        "      {% else %}",
+        "        {{ None }}",
+        "      {% endif %}  ",
+        "    json_attributes_topic: \"wican/ev3/celltemp_batstatus\"",
+        "    json_attributes_template: >",
+        "      {% if value_json is defined and value_json.timestamp is defined %}",
+        "        {{ {'data_timestamp': (value_json.timestamp | as_datetime | as_local).strftime('%Y-%m-%d %H:%M:%S')} | tojson }}",
+        "      {% else %}",
+        "        {{ {} | tojson }}",
+        "      {% endif %}",
+        "    device: *wican_device",
+        "",
+        "  - name: \"REGEN MAX\"",
+        "    unique_id: \"wican_9c139e8f5a35_regen_max\"",
+        "    state_topic: \"wican/ev3/celltemp_batstatus\"",
+        "    unit_of_measurement: \"A\"",
+        "    device_class: \"current\"",
+        "    state_class: \"measurement\"",
+        "    suggested_display_precision: 1",
+        "    value_template: >",
+        "      {% if value_json is defined and value_json.REGEN_MAX is defined %}",
+        "        {{ value_json.REGEN_MAX }}",
+        "      {% elif states('sensor.wican_ev3_regen_max') is number %}",
+        "        {{ states('sensor.wican_ev3_regen_max') }}",
+        "      {% else %}",
+        "        {{ None }}",
+        "      {% endif %}",
+        "    json_attributes_topic: \"wican/ev3/celltemp_batstatus\"",
+        "    json_attributes_template: >",
+        "      {% if value_json is defined and value_json.timestamp is defined %}",
+        "        {{ {'data_timestamp': (value_json.timestamp | as_datetime | as_local).strftime('%Y-%m-%d %H:%M:%S')} | tojson }}",
+        "      {% else %}",
+        "        {{ {} | tojson }}",
+        "      {% endif %}",
+        "    device: *wican_device",
+        "",
+        "  - name: \"POWER MAX\"",
+        "    unique_id: \"wican_9c139e8f5a35_power_max\"",
+        "    state_topic: \"wican/ev3/celltemp_batstatus\"",
+        "    unit_of_measurement: \"kW\"",
+        "    device_class: \"power\"",
+        "    state_class: \"measurement\"",
+        "    suggested_display_precision: 1",
+        "    value_template: >",
+        "      {% if value_json is defined and value_json.POWER_MAX is defined %}",
+        "        {{ value_json.POWER_MAX }}",
+        "      {% elif states('sensor.wican_ev3_power_max') is number %}",
+        "        {{ states('sensor.wican_ev3_power_max') }}",
+        "      {% else %}",
+        "        {{ None }}",
+        "      {% endif %}",
+        "    json_attributes_topic: \"wican/ev3/celltemp_batstatus\"",
+        "    json_attributes_template: >",
+        "      {% if value_json is defined and value_json.timestamp is defined %}",
+        "        {{ {'data_timestamp': (value_json.timestamp | as_datetime | as_local).strftime('%Y-%m-%d %H:%M:%S')} | tojson }}",
+        "      {% else %}",
+        "        {{ {} | tojson }}",
+        "      {% endif %}",
+        "    device: *wican_device",
+        "",
+        "  - name: \"INT_HUMIDITY\"",
+        "    unique_id: \"wican_9c139e8f5a35_INT_HUMIDITY\"",
+        "    state_topic: \"wican/ev3/hvac\"",
+        "    unit_of_measurement: \"%\"",
+        "    device_class: humidity",
+        "    state_class: \"measurement\"",
+        "    suggested_display_precision: 1",
+        "    value_template: >",
+        "      {% if value_json is defined and value_json.INT_HUMIDITY is defined %}",
+        "        {{ value_json.INT_HUMIDITY }}",
+        "      {% elif this.state is defined and is_number(this.state) %}",
+        "        {{ this.state }}",
+        "      {% else %}",
+        "        {{ None }}",
+        "      {% endif %}  ",
+        "    json_attributes_topic: \"wican/ev3/hvac\"",
+        "    json_attributes_template: >",
+        "      {% if value_json is defined and value_json.timestamp is defined %}",
+        "        {{ {'data_timestamp': (value_json.timestamp | as_datetime | as_local).strftime('%Y-%m-%d %H:%M:%S')} | tojson }}",
+        "      {% else %}",
+        "        {{ {} | tojson }}",
+        "      {% endif %}",
+        "    device: *wican_device",
+        "",
+        "  - name: \"T_CAB\"",
+        "    unique_id: \"wican_9c139e8f5a35_t_cab\"",
+        "    state_topic: \"wican/ev3/hvac\"",
+        "    unit_of_measurement: °C",
+        "    device_class: temperature",
+        "    state_class: \"measurement\"",
+        "    suggested_display_precision: 1",
+        "    value_template: >",
+        "      {% if value_json is defined and value_json.T_CAB is defined %}",
+        "        {{ value_json.T_CAB }}",
+        "      {% elif this.state is defined and is_number(this.state) %}",
+        "        {{ this.state }}",
+        "      {% else %}",
+        "        {{ None }}",
+        "      {% endif %}  ",
+        "    json_attributes_topic: \"wican/ev3/hvac\"",
+        "    json_attributes_template: >",
+        "      {% if value_json is defined and value_json.timestamp is defined %}",
+        "        {{ {'data_timestamp': (value_json.timestamp | as_datetime | as_local).strftime('%Y-%m-%d %H:%M:%S')} | tojson }}",
+        "      {% else %}",
+        "        {{ {} | tojson }}",
+        "      {% endif %}",
+        "    device: *wican_device",
+        "",
+        "",
+        "",
+        "",
+        "  - name: \"HV_KWH_R\"",
+        "    unique_id: \"wican_9c139e8f5a35_HV_KWH_R\"",
+        "    state_topic: \"wican/ev3/celltemp_batstatus\"",
+        "    unit_of_measurement: \"KWh\"",
+        "    state_class: total_increasing",
+        "    value_template: >",
+        "      {% if value_json is defined and value_json.HV_KWH_R is defined %}",
+        "        {{ value_json.HV_KWH_R }}",
+        "      {% elif this.state is defined and is_number(this.state) %}",
+        "        {{ this.state }}",
+        "      {% else %}",
+        "        {{ None }}",
+        "      {% endif %}  ",
+        "    json_attributes_topic: \"wican/ev3/celltemp_batstatus\"",
+        "    json_attributes_template: >",
+        "      {% if value_json is defined and value_json.timestamp is defined %}",
+        "        {{ {'data_timestamp': (value_json.timestamp | as_datetime | as_local).strftime('%Y-%m-%d %H:%M:%S')} | tojson }}",
+        "      {% else %}",
+        "        {{ {} | tojson }}",
+        "      {% endif %}",
+        "    device: *wican_device",
+        "",
+        "  - name: \"HV_AH_CHARGED\"",
+        "    unique_id: \"wican_9c139e8f5a35_HV_AH_CHARGED\"",
+        "    state_topic: \"wican/ev3/bms220101\"",
+        "    unit_of_measurement: \"Ah\"",
+        "    state_class: total_increasing",
+        "    value_template: >",
+        "      {% if value_json is defined and value_json.HV_AH_CHARGED is defined %}",
+        "        {{ value_json.HV_AH_CHARGED }}",
+        "      {% elif this.state is defined and is_number(this.state) %}",
+        "        {{ this.state }}",
+        "      {% else %}",
+        "        {{ None }}",
+        "      {% endif %}  ",
+        "    json_attributes_topic: \"wican/ev3/bms220101\"",
+        "    json_attributes_template: >",
+        "      {% if value_json is defined and value_json.timestamp is defined %}",
+        "        {{ {'data_timestamp': (value_json.timestamp | as_datetime | as_local).strftime('%Y-%m-%d %H:%M:%S')} | tojson }}",
+        "      {% else %}",
+        "        {{ {} | tojson }}",
+        "      {% endif %}",
+        "    device: *wican_device",
+        "",
+        "  - name: \"HV_AH_DISCHARGED\"",
+        "    unique_id: \"wican_9c139e8f5a35_HV_AH_DISCHARGED\"",
+        "    state_topic: \"wican/ev3/bms220101\"",
+        "    unit_of_measurement: \"Ah\"",
+        "    state_class: total_increasing",
+        "    value_template: >",
+        "      {% if value_json is defined and value_json.HV_AH_DISCHARGED is defined %}",
+        "        {{ value_json.HV_AH_DISCHARGED }}",
+        "      {% elif this.state is defined and is_number(this.state) %}",
+        "        {{ this.state }}",
+        "      {% else %}",
+        "        {{ None }}",
+        "      {% endif %}  ",
+        "    json_attributes_topic: \"wican/ev3/bms220101\"",
+        "    json_attributes_template: >",
+        "      {% if value_json is defined and value_json.timestamp is defined %}",
+        "        {{ {'data_timestamp': (value_json.timestamp | as_datetime | as_local).strftime('%Y-%m-%d %H:%M:%S')} | tojson }}",
+        "      {% else %}",
+        "        {{ {} | tojson }}",
+        "      {% endif %}",
+        "    device: *wican_device",
+        "",
+        "  - name: \"KWH_CHARGED\"",
+        "    unique_id: \"wican_9c139e8f5a35_KWH_CHARGED\"",
+        "    state_topic: \"wican/ev3/bms220101\"",
+        "    unit_of_measurement: \"kWh\"",
+        "    device_class: energy",
+        "    state_class: total_increasing",
+        "    value_template: >",
+        "      {% if value_json is defined and value_json.KWH_CHARGED is defined %}",
+        "        {{ value_json.KWH_CHARGED }}",
+        "      {% elif this.state is defined and is_number(this.state) %}",
+        "        {{ this.state }}",
+        "      {% else %}",
+        "        {{ None }}",
+        "      {% endif %}  ",
+        "    json_attributes_topic: \"wican/ev3/bms220101\"",
+        "    json_attributes_template: >",
+        "      {% if value_json is defined and value_json.timestamp is defined %}",
+        "        {{ {'data_timestamp': (value_json.timestamp | as_datetime | as_local).strftime('%Y-%m-%d %H:%M:%S')} | tojson }}",
+        "      {% else %}",
+        "        {{ {} | tojson }}",
+        "      {% endif %}",
+        "    device: *wican_device",
+        "",
+        "  - name: \"KWH_DISCHARGED\"",
+        "    unique_id: \"wican_9c139e8f5a35_KWH_DISCHARGED\"",
+        "    state_topic: \"wican/ev3/bms220101\"",
+        "    unit_of_measurement: \"kWh\"",
+        "    device_class: energy",
+        "    state_class: total_increasing",
+        "    value_template: >",
+        "      {% if value_json is defined and value_json.KWH_DISCHARGED is defined %}",
+        "        {{ value_json.KWH_DISCHARGED }}",
+        "      {% elif this.state is defined and is_number(this.state) %}",
+        "        {{ this.state }}",
+        "      {% else %}",
+        "        {{ None }}",
+        "      {% endif %}  ",
+        "    json_attributes_topic: \"wican/ev3/bms220101\"",
+        "    json_attributes_template: >",
+        "      {% if value_json is defined and value_json.timestamp is defined %}",
+        "        {{ {'data_timestamp': (value_json.timestamp | as_datetime | as_local).strftime('%Y-%m-%d %H:%M:%S')} | tojson }}",
+        "      {% else %}",
+        "        {{ {} | tojson }}",
+        "      {% endif %}",
+        "    device: *wican_device",
+        "",
+        "  - name: \"ISOLATION_RES\"",
+        "    unique_id: \"wican_9c139e8f5a35_ISOLATION_RES\"",
+        "    state_topic: \"wican/ev3/bms220101\"",
+        "    unit_of_measurement: \"kOhm\"",
+        "    state_class: measurement",
+        "    value_template: >",
+        "      {% if value_json is defined and value_json.ISOLATION_RES is defined %}",
+        "        {{ value_json.ISOLATION_RES }}",
+        "      {% elif this.state is defined and is_number(this.state) %}",
+        "        {{ this.state }}",
+        "      {% else %}",
+        "        {{ None }}",
+        "      {% endif %}  ",
+        "    json_attributes_topic: \"wican/ev3/bms220101\"",
+        "    json_attributes_template: >",
+        "      {% if value_json is defined and value_json.timestamp is defined %}",
+        "        {{ {'data_timestamp': (value_json.timestamp | as_datetime | as_local).strftime('%Y-%m-%d %H:%M:%S')} | tojson }}",
+        "      {% else %}",
+        "        {{ {} | tojson }}",
+        "      {% endif %}",
+        "    device: *wican_device",
+        "",
+        "  - name: \"SOC_D\"",
+        "    unique_id: \"wican_9c139e8f5a35_SOC_D\"",
+        "    state_topic: \"wican/ev3/celltemp_batstatus\"",
+        "    unit_of_measurement: \"%\"",
+        "    device_class: battery",
+        "    state_class: measurement",
+        "    suggested_display_precision: 1",
+        "    value_template: >",
+        "      {% if value_json is defined and value_json.SOC_D is defined %}",
+        "        {{ value_json.SOC_D }}",
+        "      {% elif this.state is defined and is_number(this.state) %}",
+        "        {{ this.state }}",
+        "      {% else %}",
+        "        {{ None }}",
+        "      {% endif %}  ",
+        "    json_attributes_topic: \"wican/ev3/celltemp_batstatus\"",
+        "    json_attributes_template: >",
+        "      {% if value_json is defined and value_json.timestamp is defined %}",
+        "        {{ {'data_timestamp': (value_json.timestamp | as_datetime | as_local).strftime('%Y-%m-%d %H:%M:%S')} | tojson }}",
+        "      {% else %}",
+        "        {{ {} | tojson }}",
+        "      {% endif %}",
+        "    device: *wican_device",
+        "",
+        "  - name: \"SOH\"",
+        "    unique_id: \"wican_9c139e8f5a35_SOH\"",
+        "    state_topic: \"wican/ev3/celltemp_batstatus\"",
+        "    unit_of_measurement: \"%\"",
+        "    device_class: battery",
+        "    state_class: measurement",
+        "    value_template: >",
+        "      {% if value_json is defined and value_json.SOH is defined %}",
+        "        {{ value_json.SOH }}",
+        "      {% elif this.state is defined and is_number(this.state) %}",
+        "        {{ this.state }}",
+        "      {% else %}",
+        "        {{ None }}",
+        "      {% endif %}  ",
+        "    json_attributes_topic: \"wican/ev3/celltemp_batstatus\"",
+        "    json_attributes_template: >",
+        "      {% if value_json is defined and value_json.timestamp is defined %}",
+        "        {{ {'data_timestamp': (value_json.timestamp | as_datetime | as_local).strftime('%Y-%m-%d %H:%M:%S')} | tojson }}",
+        "      {% else %}",
+        "        {{ {} | tojson }}",
+        "      {% endif %}",
+        "    device: *wican_device",
+        "",
+        "  - name: \"HV_V\"",
+        "    unique_id: \"wican_9c139e8f5a35_HV_V\"",
+        "    state_topic: \"wican/ev3/bms220101\"",
+        "    unit_of_measurement: \"V\"",
+        "    device_class: voltage",
+        "    state_class: measurement",
+        "    value_template: >",
+        "      {% if value_json is defined and value_json.HV_V is defined %}",
+        "        {{ value_json.HV_V }}",
+        "      {% elif this.state is defined and is_number(this.state) %}",
+        "        {{ this.state }}",
+        "      {% else %}",
+        "        {{ None }}",
+        "      {% endif %}  ",
+        "    json_attributes_topic: \"wican/ev3/bms220101\"",
+        "    json_attributes_template: >",
+        "      {% if value_json is defined and value_json.timestamp is defined %}",
+        "        {{ {'data_timestamp': (value_json.timestamp | as_datetime | as_local).strftime('%Y-%m-%d %H:%M:%S')} | tojson }}",
+        "      {% else %}",
+        "        {{ {} | tojson }}",
+        "      {% endif %}",
+        "    device: *wican_device",
+        "",
+        "  - name: \"LV_V\"",
+        "    unique_id: \"wican_9c139e8f5a35_LV_V\"",
+        "    state_topic: \"wican/ev3/bms220101\"",
+        "    unit_of_measurement: \"V\"",
+        "    device_class: voltage",
+        "    state_class: measurement",
+        "    value_template: >",
+        "      {% if value_json is defined and value_json.LV_V is defined %}",
+        "        {{ value_json.LV_V }}",
+        "      {% elif this.state is defined and is_number(this.state) %}",
+        "        {{ this.state }}",
+        "      {% else %}",
+        "        {{ None }}",
+        "      {% endif %}  ",
+        "    json_attributes_topic: \"wican/ev3/bms220101\"",
+        "    json_attributes_template: >",
+        "      {% if value_json is defined and value_json.timestamp is defined %}",
+        "        {{ {'data_timestamp': (value_json.timestamp | as_datetime | as_local).strftime('%Y-%m-%d %H:%M:%S')} | tojson }}",
+        "      {% else %}",
+        "        {{ {} | tojson }}",
+        "      {% endif %}",
+        "    device: *wican_device",
+        "",
+        "  - name: \"TYRE_P_FL\"",
+        "    unique_id: \"wican_9c139e8f5a35_TYRE_P_FL\"",
+        "    state_topic: \"wican/ev3/tyres\"",
+        "    unit_of_measurement: \"bar\"",
+        "    device_class: pressure",
+        "    state_class: measurement",
+        "    value_template: >",
+        "      {% if value_json is defined and value_json.TYRE_P_FL is defined %}",
+        "        {{ (value_json.TYRE_P_FL | float * 0.0689476) | round(2) }}",
+        "      {% elif this.state is defined and is_number(this.state) %}",
+        "        {{ this.state }}",
+        "      {% else %}",
+        "        {{ None }}",
+        "      {% endif %}  ",
+        "    json_attributes_topic: \"wican/ev3/tyres\"",
+        "    json_attributes_template: >",
+        "      {% if value_json is defined and value_json.timestamp is defined %}",
+        "        {{ {'data_timestamp': (value_json.timestamp | as_datetime | as_local).strftime('%Y-%m-%d %H:%M:%S')} | tojson }}",
+        "      {% else %}",
+        "        {{ {} | tojson }}",
+        "      {% endif %}",
+        "    device: *wican_device",
+        "",
+        "  - name: \"TYRE_P_FR\"",
+        "    unique_id: \"wican_9c139e8f5a35_TYRE_P_FR\"",
+        "    state_topic: \"wican/ev3/tyres\"",
+        "    unit_of_measurement: \"bar\"",
+        "    device_class: pressure",
+        "    state_class: measurement",
+        "    value_template: >",
+        "      {% if value_json is defined and value_json.TYRE_P_FR is defined %}",
+        "        {{ (value_json.TYRE_P_FR | float * 0.0689476) | round(2) }}",
+        "      {% elif this.state is defined and is_number(this.state) %}",
+        "        {{ this.state }}",
+        "      {% else %}",
+        "        {{ None }}",
+        "      {% endif %}  ",
+        "    json_attributes_topic: \"wican/ev3/tyres\"",
+        "    json_attributes_template: >",
+        "      {% if value_json is defined and value_json.timestamp is defined %}",
+        "        {{ {'data_timestamp': (value_json.timestamp | as_datetime | as_local).strftime('%Y-%m-%d %H:%M:%S')} | tojson }}",
+        "      {% else %}",
+        "        {{ {} | tojson }}",
+        "      {% endif %}",
+        "    device: *wican_device",
+        "",
+        "  - name: \"TYRE_P_RL\"",
+        "    unique_id: \"wican_9c139e8f5a35_TYRE_P_RL\"",
+        "    state_topic: \"wican/ev3/tyres\"",
+        "    unit_of_measurement: \"bar\"",
+        "    device_class: pressure",
+        "    state_class: measurement",
+        "    value_template: >",
+        "      {% if value_json is defined and value_json.TYRE_P_RL is defined %}",
+        "        {{ (value_json.TYRE_P_RL | float * 0.0689476) | round(2) }}",
+        "      {% elif this.state is defined and is_number(this.state) %}",
+        "        {{ this.state }}",
+        "      {% else %}",
+        "        {{ None }}",
+        "      {% endif %}  ",
+        "    json_attributes_topic: \"wican/ev3/tyres\"",
+        "    json_attributes_template: >",
+        "      {% if value_json is defined and value_json.timestamp is defined %}",
+        "        {{ {'data_timestamp': (value_json.timestamp | as_datetime | as_local).strftime('%Y-%m-%d %H:%M:%S')} | tojson }}",
+        "      {% else %}",
+        "        {{ {} | tojson }}",
+        "      {% endif %}",
+        "    device: *wican_device",
+        "",
+        "  - name: \"TYRE_P_RR\"",
+        "    unique_id: \"wican_9c139e8f5a35_TYRE_P_RR\"",
+        "    state_topic: \"wican/ev3/tyres\"",
+        "    unit_of_measurement: \"bar\"",
+        "    device_class: pressure",
+        "    state_class: measurement",
+        "    value_template: >",
+        "      {% if value_json is defined and value_json.TYRE_P_RR is defined %}",
+        "        {{ (value_json.TYRE_P_RR | float * 0.0689476) | round(2) }}",
+        "      {% elif this.state is defined and is_number(this.state) %}",
+        "        {{ this.state }}",
+        "      {% else %}",
+        "        {{ None }}",
+        "      {% endif %}  ",
+        "    json_attributes_topic: \"wican/ev3/tyres\"",
+        "    json_attributes_template: >",
+        "      {% if value_json is defined and value_json.timestamp is defined %}",
+        "        {{ {'data_timestamp': (value_json.timestamp | as_datetime | as_local).strftime('%Y-%m-%d %H:%M:%S')} | tojson }}",
+        "      {% else %}",
+        "        {{ {} | tojson }}",
+        "      {% endif %}",
+        "    device: *wican_device",
+        "",
+        "  - name: \"TYRE_T_FL\"",
+        "    unique_id: \"wican_9c139e8f5a35_TYRE_T_FL\"",
+        "    state_topic: \"wican/ev3/tyres\"",
+        "    unit_of_measurement: °C",
+        "    device_class: temperature",
+        "    state_class: measurement",
+        "    value_template: >",
+        "      {% if value_json is defined and value_json.TYRE_T_FL is defined %}",
+        "        {{ (value_json.TYRE_T_FL)  }}",
+        "      {% elif this.state is defined and is_number(this.state) %}",
+        "        {{ this.state }}",
+        "      {% else %}",
+        "        {{ None }}",
+        "      {% endif %}  ",
+        "    json_attributes_topic: \"wican/ev3/tyres\"",
+        "    json_attributes_template: >",
+        "      {% if value_json is defined and value_json.timestamp is defined %}",
+        "        {{ {'data_timestamp': (value_json.timestamp | as_datetime | as_local).strftime('%Y-%m-%d %H:%M:%S')} | tojson }}",
+        "      {% else %}",
+        "        {{ {} | tojson }}",
+        "      {% endif %}",
+        "    device: *wican_device",
+        "",
+        "  - name: \"TYRE_T_FR\"",
+        "    unique_id: \"wican_9c139e8f5a35_TYRE_T_FR\"",
+        "    state_topic: \"wican/ev3/tyres\"",
+        "    unit_of_measurement: °C",
+        "    device_class: temperature",
+        "    state_class: measurement",
+        "    value_template: >",
+        "      {% if value_json is defined and value_json.TYRE_T_FR is defined %}",
+        "        {{ (value_json.TYRE_T_FR)  }}",
+        "      {% elif this.state is defined and is_number(this.state) %}",
+        "        {{ this.state }}",
+        "      {% else %}",
+        "        {{ None }}",
+        "      {% endif %}  ",
+        "    json_attributes_topic: \"wican/ev3/tyres\"",
+        "    json_attributes_template: >",
+        "      {% if value_json is defined and value_json.timestamp is defined %}",
+        "        {{ {'data_timestamp': (value_json.timestamp | as_datetime | as_local).strftime('%Y-%m-%d %H:%M:%S')} | tojson }}",
+        "      {% else %}",
+        "        {{ {} | tojson }}",
+        "      {% endif %}",
+        "    device: *wican_device",
+        "",
+        "  - name: \"TYRE_T_RL\"",
+        "    unique_id: \"wican_9c139e8f5a35_TYRE_T_RL\"",
+        "    state_topic: \"wican/ev3/tyres\"",
+        "    unit_of_measurement: °C",
+        "    device_class: temperature",
+        "    state_class: measurement",
+        "    value_template: >",
+        "      {% if value_json is defined and value_json.TYRE_T_RL is defined %}",
+        "        {{ (value_json.TYRE_T_RL)  }}",
+        "      {% elif this.state is defined and is_number(this.state) %}",
+        "        {{ this.state }}",
+        "      {% else %}",
+        "        {{ None }}",
+        "      {% endif %}  ",
+        "    json_attributes_topic: \"wican/ev3/tyres\"",
+        "    json_attributes_template: >",
+        "      {% if value_json is defined and value_json.timestamp is defined %}",
+        "        {{ {'data_timestamp': (value_json.timestamp | as_datetime | as_local).strftime('%Y-%m-%d %H:%M:%S')} | tojson }}",
+        "      {% else %}",
+        "        {{ {} | tojson }}",
+        "      {% endif %}",
+        "    device: *wican_device",
+        "",
+        "  - name: \"TYRE_T_RR\"",
+        "    unique_id: \"wican_9c139e8f5a35_TYRE_T_RR\"",
+        "    state_topic: \"wican/ev3/tyres\"",
+        "    unit_of_measurement: °C",
+        "    device_class: temperature",
+        "    state_class: measurement",
+        "    value_template: >",
+        "      {% if value_json is defined and value_json.TYRE_T_RR is defined %}",
+        "        {{ (value_json.TYRE_T_RR) }}",
+        "      {% elif this.state is defined and is_number(this.state) %}",
+        "        {{ this.state }}",
+        "      {% else %}",
+        "        {{ None }}",
+        "      {% endif %}  ",
+        "    json_attributes_topic: \"wican/ev3/tyres\"",
+        "    json_attributes_template: >",
+        "      {% if value_json is defined and value_json.timestamp is defined %}",
+        "        {{ {'data_timestamp': (value_json.timestamp | as_datetime | as_local).strftime('%Y-%m-%d %H:%M:%S')} | tojson }}",
+        "      {% else %}",
+        "        {{ {} | tojson }}",
+        "      {% endif %}",
+        "    device: *wican_device",
+        "",
+        "  - name: \"ODOMETER\"",
+        "    unique_id: \"wican_9c139e8f5a35_ODOMETER\"",
+        "    state_topic: \"wican/ev3/odometer\"",
+        "    unit_of_measurement: \"km\"",
+        "    device_class: distance",
+        "    state_class: total_increasing",
+        "    value_template: >",
+        "      {% if value_json is defined and value_json.ODOMETER is defined %}",
+        "        {{ value_json.ODOMETER }}",
+        "      {% elif this.state is defined and is_number(this.state) %}",
+        "        {{ this.state }}",
+        "      {% else %}",
+        "        {{ None }}",
+        "      {% endif %}  ",
+        "    json_attributes_topic: \"wican/ev3/odometer\"",
+        "    json_attributes_template: >",
+        "      {% if value_json is defined and value_json.timestamp is defined %}",
+        "        {{ {'data_timestamp': (value_json.timestamp | as_datetime | as_local).strftime('%Y-%m-%d %H:%M:%S')} | tojson }}",
+        "      {% else %}",
+        "        {{ {} | tojson }}",
+        "      {% endif %}",
+        "    device: *wican_device",
+        "",
+        "  - name: \"OP_TIME\"",
+        "    unique_id: \"wican_9c139e8f5a35_OP_TIME\"",
+        "    state_topic: \"wican/ev3/bms220101\"",
+        "    unit_of_measurement: \"h\"",
+        "    device_class: duration",
+        "    state_class: total_increasing",
+        "    value_template: >",
+        "      {% if value_json is defined and value_json.OP_TIME is defined %}",
+        "        {{ value_json.OP_TIME }}",
+        "      {% elif this.state is defined and is_number(this.state) %}",
+        "        {{ this.state }}",
+        "      {% else %}",
+        "        {{ None }}",
+        "      {% endif %}  ",
+        "    json_attributes_topic: \"wican/ev3/bms220101\"",
+        "    json_attributes_template: >",
+        "      {% if value_json is defined and value_json.timestamp is defined %}",
+        "        {{ {'data_timestamp': (value_json.timestamp | as_datetime | as_local).strftime('%Y-%m-%d %H:%M:%S')} | tojson }}",
+        "      {% else %}",
+        "        {{ {} | tojson }}",
+        "      {% endif %}",
+        "    device: *wican_device",
+        "",
+        "  - name: \"Last Updated\"",
+        "    unique_id: \"wican_9c139e8f5a35_timestamp\"",
+        "    state_topic: \"wican/ev3/hvac\"",
+        "    device_class: timestamp",
+        "    value_template: >",
+        "      {# Use the topic here that updates the fastest. (or the slowest if you want) #}",
+        "      {% if value_json is defined and value_json.timestamp is defined %}",
+        "        {{ value_json.timestamp | int | as_datetime }}",
+        "      {% else %}",
+        "        {{ none }}",
+        "      {% endif %}",
+        "    json_attributes_topic: \"wican/ev3/hvac\"",
+        "    json_attributes_template: >",
+        "      {% if value_json is defined and value_json.timestamp is defined %}",
+        "        {{ {'data_timestamp': (value_json.timestamp | int | as_datetime | as_local).strftime('%Y-%m-%d %H:%M:%S')} | tojson }}",
+        "      {% else %}",
+        "        {{ {} | tojson }}",
+        "      {% endif %}",
+        "    device: *wican_device"
+      ]
+    }
+  ],
+  "std_pids": [],
+  "pids": [],
+  "can_filters": []
+}

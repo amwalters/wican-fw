@@ -265,7 +265,8 @@ function promptProfileSwitch(currentModel, newModel) {
         return date.toLocaleString();
     }
 
-    async function fetchVehicleProfiles() {
+
+async function fetchVehicleProfiles(source = 'stock') {
         try {
             if (!navigator.onLine) throw new Error('No internet connection');
             
@@ -337,42 +338,63 @@ function promptProfileSwitch(currentModel, newModel) {
                 preservedCar = JSON.parse(JSON.stringify(active)); // Deep copy to secure it!
             }
 
-            // 3. Fetch DB
-            const response = await fetch('https://raw.githubusercontent.com/meatpiHQ/wican-fw/main/vehicle_profiles.json');
-            if (!response.ok) throw new Error('Network response was not ok');
-            const dbData = await response.json();
+            // 3. Track which ecosystem we are using
+            window.db_source = source; 
 
-            // 4. Overwrite global memory
-            latest_car_models = dbData;
-            if (!latest_car_models.cars) latest_car_models.cars = [];
+            if (source === 'group') {
+                // ---> FETCH VEHICLE GROUP INDEXED DB <---
+                const response = await fetch('https://raw.githubusercontent.com/wambs/wican-fw/wican-pro/profiles/index.json');
+                if (!response.ok) throw new Error('Vehicle Group Index not found');
+                const indexData = await response.json();
+                
+                window.github_profile_index = indexData.profiles;
+                if (!latest_car_models) latest_car_models = { cars: [] };
 
-            // 5. INJECT THE PRESERVED CAR BACK INTO MEMORY (No Popups!)
-            if (preservedCar) {
-                const dbIndex = latest_car_models.cars.findIndex(c => c.car_model === currentSelectedModel);
-                if (dbIndex !== -1) {
-                    latest_car_models.cars[dbIndex] = preservedCar;
-                } else {
-                    latest_car_models.cars.push(preservedCar);
+                // INJECT THE PRESERVED CAR BACK INTO MEMORY
+                if (preservedCar) {
+                    const dbIndex = latest_car_models.cars.findIndex(c => c.car_model === currentSelectedModel);
+                    if (dbIndex !== -1) latest_car_models.cars[dbIndex] = preservedCar;
+                    else latest_car_models.cars.push(preservedCar);
                 }
+
+                const carModels = ["Not Selected"];
+                window.github_profile_index.forEach(profile => carModels.push(profile.name));
+                
+                loadCarModels({ "supported": carModels });
+                showNotification("Vehicle Group Database loaded.", "blue");
+
+            } else {
+                // ---> FETCH STOCK MEATPI MONOLITH <---
+                const response = await fetch('https://raw.githubusercontent.com/meatpiHQ/wican-fw/main/vehicle_profiles.json');
+                if (!response.ok) throw new Error('Stock DB not found');
+                const dbData = await response.json();
+                
+                latest_car_models = dbData;
+                if (!latest_car_models.cars) latest_car_models.cars = [];
+
+                // INJECT THE PRESERVED CAR BACK INTO MEMORY
+                if (preservedCar) {
+                    const dbIndex = latest_car_models.cars.findIndex(c => c.car_model === currentSelectedModel);
+                    if (dbIndex !== -1) latest_car_models.cars[dbIndex] = preservedCar;
+                    else latest_car_models.cars.push(preservedCar);
+                }
+
+                const carModels = ["Not Selected"];
+                latest_car_models.cars.forEach(car => {
+                    if (car.car_model) carModels.push(car.car_model);
+                });
+                
+                loadCarModels({ "supported": carModels });
+                showNotification("Stock MeatPi Database loaded.", "green");
             }
 
-            // 6. Update Dropdown List Quietly
-            const carModels = ["Not Selected"];
-            latest_car_models.cars.forEach(car => {
-                if (car.car_model) carModels.push(car.car_model);
-            });
-
-            var mod = { "supported": carModels };
-            loadCarModels(mod);
-
-            // Re-select the active car silently
+            // Restore the dropdown selection silently
             if (currentSelectedModel !== "Not Selected") {
                 document.getElementById('car_model').value = currentSelectedModel;
                 window.activeDropdownModel = currentSelectedModel;
             }
 
             enableAutoStoreButton();
-            showNotification("Latest profiles downloaded from GitHub.", "green");
 
         } catch (error) {
             console.error('Fetch error:', error);
@@ -5053,8 +5075,37 @@ async function Load() {
                 }
             }
 
-            // 5. Normal Replacement (User clicked Replace Entirely)
+            // 5. Normal Replacement
             window.activeDropdownModel = selectedModel;
+
+            // ---> NEW: LAZY LOAD VEHICLE GROUP CARS ON DEMAND <---
+            if (window.db_source === 'group' && selectedModel !== "Not Selected") {
+                let carExists = latest_car_models?.cars?.find(c => c.car_model === selectedModel);
+                
+                if (!carExists && window.github_profile_index) {
+                    const profileMeta = window.github_profile_index.find(p => p.name === selectedModel);
+                    
+                    if (profileMeta) {
+                        try {
+                            showNotification(`Downloading ${selectedModel}...`, "blue", 2000);
+                            const res = await fetch(`https://raw.githubusercontent.com/wambs/wican-fw/wican-pro/profiles/${profileMeta.file}`);
+                            if (!res.ok) throw new Error('File not found');
+                            
+                            const fetchedCarData = await res.json();
+                            
+                            if (fetchedCarData.cars && fetchedCarData.cars[0]) {
+                                latest_car_models.cars.push(fetchedCarData.cars[0]);
+                            }
+                        } catch (err) {
+                            showNotification(`Failed to download ${selectedModel}`, "red");
+                            console.error(err);
+                            return; // Halt render on failure
+                        }
+                    }
+                }
+            }
+            // ---------------------------------------------
+	    
             executeCarRender(selectedModel);
             
             function executeCarRender(modelToRender) {
@@ -5140,6 +5191,30 @@ async function Load() {
                     } else {
                         if (typeof renderVehicleGroups === 'function') renderVehicleGroups([]);
                     }
+		    
+                    // ---> NEW: AUTO-EXTRACT HOME ASSISTANT YAML <---
+                    if (selectedCar.home_assistant_yaml && Array.isArray(selectedCar.home_assistant_yaml)) {
+                        try {
+                            const yamlText = selectedCar.home_assistant_yaml.join('\n');
+                            const blob = new Blob([yamlText], { type: 'text/yaml' });
+                            const url = window.URL.createObjectURL(blob);
+                            const link = document.createElement('a');
+                            
+                            const safeName = modelToRender.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+                            link.href = url;
+                            link.download = `ha_sensors_${safeName}.yaml`;
+                            
+                            document.body.appendChild(link);
+                            link.click(); // Trigger the download
+                            document.body.removeChild(link);
+                            window.URL.revokeObjectURL(url);
+                            
+                            showNotification(`Home Assistant YAML for ${modelToRender} auto-downloaded!`, "blue", 4000);
+                        } catch (err) {
+                            console.error("Failed to auto-download HA YAML:", err);
+                        }
+                    }
+                    // -----------------------------------------------		    
                 }
                 if (typeof enableAutoStoreButton === 'function') enableAutoStoreButton();
             }
@@ -7628,11 +7703,15 @@ function cloneParameter(gIndex, pIndex, paramIndex) {
     renderVehicleGroups();
 }
 
+
+// ==========================================================================
+//  DOWNLOAD ACTIVE PROFILE (WITH HA YAML INTERCEPT)
+// ==========================================================================
 function downloadActiveProfile() {
     try {
         const carModelValue = document.getElementById("car_model")?.value || "Unknown_Car";
         
-        // 1. Prepare the base structure for the Vehicle Profile (Groups & Specific)
+        // 1. Prepare the base structure for the Vehicle Profile
         let carData = {
             car_model: carModelValue,
             init: document.getElementById("specific_init")?.value || "",
@@ -7640,6 +7719,13 @@ function downloadActiveProfile() {
             can_filters: [],
             pid_groups: []
         };
+
+        // --- PRESERVE EXISTING YAML ---
+        // If they just downloaded a community profile that already has YAML, we don't want to lose it!
+        const existingCar = latest_car_models?.cars?.find(c => c.car_model === carModelValue);
+        if (existingCar && existingCar.home_assistant_yaml) {
+            carData.home_assistant_yaml = existingCar.home_assistant_yaml;
+        }
 
         // 2. Capture Groups
         if (latest_car_models && latest_car_models.pid_groups) {
@@ -7775,27 +7861,71 @@ function downloadActiveProfile() {
             can_filters: custom_can_filters
         };
 
-        const dataStr = JSON.stringify(exportObj, null, 2);
-        const blob = new Blob([dataStr], { type: 'application/json' });
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        
-        const safeName = carModelValue.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-        link.href = url;
-        link.download = `wican_profile_${safeName}.json`;
-        
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
+        // --- THE HA YAML INTERCEPT PROMPT ---
+        if (confirm("Would you like to bundle a Home Assistant YAML file with this profile?")) {
+            // Save the export object temporarily so the file picker can grab it
+            window.pendingExportObj = exportObj;
+            window.pendingExportName = carModelValue;
+            
+            // Trigger the hidden file input
+            document.getElementById('hidden_yaml_input').click();
+            return; // Pause the download here. The file input's onchange will resume it.
+        }
 
-        showNotification("Unified Profile downloaded successfully", "green");
+        // If they clicked "Cancel" on the prompt, proceed with normal JSON download
+        executeFinalDownload(exportObj, carModelValue);
 
     } catch (e) {
         console.error("Download failed:", e);
         showNotification("Failed to generate profile: " + e.message, "red");
     }
 }
+
+// --- HELPER 1: Finishes the download (called by both paths) ---
+function executeFinalDownload(exportObj, carModelValue) {
+    const dataStr = JSON.stringify(exportObj, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    
+    const safeName = carModelValue.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+    link.href = url;
+    link.download = `wican_profile_${safeName}.json`;
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+
+    showNotification("Unified Profile downloaded successfully", "green");
+}
+
+// --- HELPER 2: Handles the File Picker and Injects the YAML ---
+function finalizeProfileDownloadWithYaml(event) {
+    const file = event.target.files[0];
+    if (!file || !window.pendingExportObj) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const yamlText = e.target.result;
+        
+        // Split YAML into an array of strings to keep the JSON formatting clean
+        const yamlArray = yamlText.split('\n').map(line => line.replace(/\r/g, ''));
+        
+        // Inject into the waiting export object
+        window.pendingExportObj.cars[0].home_assistant_yaml = yamlArray;
+        
+        // Resume the download
+        executeFinalDownload(window.pendingExportObj, window.pendingExportName);
+        
+        // Cleanup
+        window.pendingExportObj = null;
+        window.pendingExportName = null;
+        document.getElementById('hidden_yaml_input').value = '';
+    };
+    reader.readAsText(file);
+}
+
 
 async function vpnDebugResolveNtp()
 {

@@ -1,7 +1,7 @@
 {
   "cars": [
     {
-      "car_model": "Fusion 2015",
+      "car_model": "2015 Fusion Hybrid",
       "init": "",
       "pids": [],
       "can_filters": [],

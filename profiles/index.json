@@ -1,0 +1,16 @@
+{
+  "profiles": [
+    {
+      "name": "2015 Fusion Hybrid",
+      "file": "wican_profile_ford_fusion_hybrid.json"
+    },
+    {
+      "name": "2020 F-350 Super Duty Dually",
+      "file": "wican_profile_2020_F350_Super_duty_dually.json"
+    },
+    {
+      "name": "KIA EV3 2024 Long Range",
+      "file": "wican_profile_kia_ev3_2024_long_range.json"
+    }
+  ]
+}

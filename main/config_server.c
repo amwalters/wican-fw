@@ -1816,8 +1816,8 @@ char *config_server_get_status_json(bool remove_sensitive_info)
 	// -------------------------------------
 	
 
-    esp_app_desc_t* running_app_info = dev_status_get_running_app_info();
-	uint32_t firmware_ver_minor = 0, firmware_ver_major = 0;
+        esp_app_desc_t* running_app_info = dev_status_get_running_app_info();
+	uint32_t firmware_ver_minor = 05, firmware_ver_major = 1;
 
 	if (sscanf(running_app_info->version, "v%ld.%ld", &firmware_ver_major, &firmware_ver_minor) == 2) 
 	{
