@@ -2361,6 +2361,42 @@ esp_err_t elm327_sleep(void)
     return ret;
 }
 
+esp_err_t elm327_wake(void)
+{
+#if HARDWARE_VER == WICAN_PRO
+    ESP_LOGI(TAG, "Waking ELM327 chip");
+
+    gpio_deep_sleep_hold_dis();
+    gpio_hold_dis(OBD_SLEEP_PIN);
+    rtc_gpio_hold_dis(OBD_SLEEP_PIN);
+    rtc_gpio_pulldown_dis(OBD_SLEEP_PIN);
+    gpio_sleep_set_pull_mode(OBD_SLEEP_PIN, GPIO_FLOATING);
+    rtc_gpio_deinit(OBD_SLEEP_PIN);
+    gpio_reset_pin(OBD_SLEEP_PIN);
+    gpio_set_direction(OBD_SLEEP_PIN, GPIO_MODE_OUTPUT);
+    gpio_pulldown_en(OBD_SLEEP_PIN);
+    gpio_set_level(OBD_SLEEP_PIN, 1);
+
+    for (uint8_t i = 0; i < 5; i++)
+    {
+        if (elm327_chip_get_status() == ELM327_READY)
+        {
+            break;
+        }
+        vTaskDelay(pdMS_TO_TICKS(100));
+    }
+
+    elm327_hardreset_chip();
+
+    if (elm327_chip_get_status() != ELM327_READY)
+    {
+        ESP_LOGE(TAG, "ELM327 chip did not wake");
+        return ESP_FAIL;
+    }
+#endif
+    return ESP_OK;
+}
+
 static bool is_hex_char(char c)
 {
 	return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f');

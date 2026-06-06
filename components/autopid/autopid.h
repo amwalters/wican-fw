@@ -247,6 +247,10 @@ typedef struct
     // When enabled, IMU activity and the post-motion hold timer override low-voltage PID polling pause.
     // Stored in auto_pid.json as: imu_voltage_override = "enable"/"disable".
     bool imu_voltage_override_enabled;
+
+    // When enabled, WiFi/BLE and the ELM chip are powered down while PID polling is paused and restored on resume.
+    // Stored in auto_pid.json as: disable_wifi_ble_on_pid_pause = "enable"/"disable".
+    bool disable_wifi_ble_on_pid_pause_enabled;
     
     // When enabled, validate that each PID request's response matches the request (service + PID bytes)
     // using the command string (cmd_str) provided by the ELM command runner.

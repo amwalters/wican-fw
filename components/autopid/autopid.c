@@ -54,6 +54,8 @@
 #include "esp_heap_caps.h"
 #include "imu.h"
 #include "vehicle.h"
+#include "wifi_mgr.h"
+#include "ble.h"
 
 // #define TAG __func__
 #define TAG "AUTO_PID"
@@ -3497,6 +3499,102 @@ static bool autopid_should_pause_pid_polling(float *out_voltage, const char **ou
     return power_detection_should_pause_pid_polling(autopid_config, out_voltage, out_reason);
 }
 
+static void autopid_apply_pid_pause_low_power(bool pid_polling_paused)
+{
+    static bool low_power_pause_active = false;
+    static bool restore_wifi = false;
+    static bool restore_ble = false;
+#if HARDWARE_VER == WICAN_PRO
+    static bool restore_elm = false;
+#endif
+
+    bool disable_low_power = autopid_config &&
+        autopid_config->disable_wifi_ble_on_pid_pause_enabled;
+
+    if (pid_polling_paused && disable_low_power)
+    {
+        if (low_power_pause_active)
+            return;
+
+        restore_wifi = wifi_mgr_is_enabled();
+        restore_ble = dev_status_is_bit_set(DEV_BLE_ENABLED_BIT);
+#if HARDWARE_VER == WICAN_PRO
+        restore_elm = (elm327_chip_get_status() == ELM327_READY);
+#endif
+
+        ESP_LOGI(TAG, "Disabling WiFi/BLE/ELM during PID polling pause (restore_wifi=%d restore_ble=%d"
+#if HARDWARE_VER == WICAN_PRO
+                 " restore_elm=%d"
+#endif
+                 ")",
+                 restore_wifi ? 1 : 0,
+                 restore_ble ? 1 : 0
+#if HARDWARE_VER == WICAN_PRO
+                 , restore_elm ? 1 : 0
+#endif
+        );
+
+#if HARDWARE_VER == WICAN_PRO
+        if (restore_elm && elm327_sleep() != ESP_OK)
+        {
+            ESP_LOGW(TAG, "Failed to sleep ELM during PID polling pause");
+        }
+#endif
+
+        if (restore_ble)
+        {
+            ble_disable();
+        }
+
+        if (wifi_mgr_is_enabled())
+        {
+            wifi_mgr_disable();
+        }
+
+        low_power_pause_active = true;
+        return;
+    }
+
+    if (!low_power_pause_active)
+        return;
+
+    ESP_LOGI(TAG, "Restoring WiFi/BLE/ELM after PID polling pause (restore_wifi=%d restore_ble=%d"
+#if HARDWARE_VER == WICAN_PRO
+             " restore_elm=%d"
+#endif
+             ")",
+             restore_wifi ? 1 : 0,
+             restore_ble ? 1 : 0
+#if HARDWARE_VER == WICAN_PRO
+             , restore_elm ? 1 : 0
+#endif
+    );
+
+#if HARDWARE_VER == WICAN_PRO
+    if (restore_elm && elm327_wake() != ESP_OK)
+    {
+        ESP_LOGW(TAG, "Failed to wake ELM after PID polling pause");
+    }
+#endif
+
+    if (restore_wifi)
+    {
+        wifi_mgr_enable();
+    }
+
+    if (restore_ble)
+    {
+        ble_enable();
+    }
+
+    restore_wifi = false;
+    restore_ble = false;
+#if HARDWARE_VER == WICAN_PRO
+    restore_elm = false;
+#endif
+    low_power_pause_active = false;
+}
+
 static bool all_parameters_failed(autopid_config_t *autopid_config)
 {
     if (!autopid_config)
@@ -4361,6 +4459,8 @@ static void autopid_task(void *pvParameters)
 
         if (pid_polling_paused != pid_polling_paused_prev)
         {
+            autopid_apply_pid_pause_low_power(pid_polling_paused);
+
             if (pid_polling_paused)
             {
                 if (pause_reason && strcmp(pause_reason, "automate_threshold") == 0 && !isnan(batt_v))

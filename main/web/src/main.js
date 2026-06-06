@@ -2291,6 +2291,10 @@ function loadAutoTable(jsonData) {
         if (imuVoltageOverrideEl) {
             imuVoltageOverrideEl.checked = data.imu_voltage_override === 'enable';
         }
+        const disableWifiBleOnPidPauseEl = document.getElementById("disable_wifi_ble_on_pid_pause");
+        if (disableWifiBleOnPidPauseEl) {
+            disableWifiBleOnPidPauseEl.checked = data.disable_wifi_ble_on_pid_pause === 'enable';
+        }
         const pidMinVoltEl = document.getElementById("pid_polling_min_voltage");
         const pidMinVoltValEl = document.getElementById("pid_polling_min_voltage_value");
         if (pidMinVoltEl && pidMinVoltValEl) pidMinVoltValEl.textContent = pidMinVoltEl.value;
@@ -2481,6 +2485,7 @@ async function storeAutoTableData() {
         const groupingValue = document.getElementById("grouping")?.value || 'disable';
         const disableOnSleepVoltageValue = document.getElementById("disable_on_sleep_voltage")?.value || 'automate_threshold';
         const imuVoltageOverrideValue = document.getElementById("imu_voltage_override")?.checked ? 'enable' : 'disable';
+        const disableWifiBleOnPidPauseValue = document.getElementById("disable_wifi_ble_on_pid_pause")?.checked ? 'enable' : 'disable';
         const pidPollingMinVoltageValueRaw = document.getElementById("pid_polling_min_voltage")?.value;
         const pidPollingMinVoltageValue = (() => {
             const n = parseFloat(pidPollingMinVoltageValueRaw);
@@ -2769,6 +2774,7 @@ async function storeAutoTableData() {
             grouping: groupingValue,
             disable_on_sleep_voltage: disableOnSleepVoltageValue,
             imu_voltage_override: imuVoltageOverrideValue,
+            disable_wifi_ble_on_pid_pause: disableWifiBleOnPidPauseValue,
             pid_polling_min_voltage: pidPollingMinVoltageValue,
             webhook_data_mode: webhook_data_mode,
             car_specific: carSpecificValue,

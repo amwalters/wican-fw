@@ -49,6 +49,7 @@ int8_t elm327_process_cmd(uint8_t *buf, uint8_t len, twai_message_t *frame, Queu
 
 void elm327_run_command(char* command, uint32_t command_len, uint32_t timeout, QueueHandle_t *response_q, response_callback_t response_callback, bool stop_after_first_frame, uint32_t expected_frame_id);
 esp_err_t elm327_sleep(void);
+esp_err_t elm327_wake(void);
 void elm327_lock(void);
 void elm327_send_cmd(uint8_t* cmd, uint32_t cmd_len);
 esp_err_t elm327_get_protocol_number(uint8_t *protocol_number);
