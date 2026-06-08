@@ -1546,22 +1546,25 @@
                     </td>
                 </tr>
                 <tr id="imu_voltage_override_row">
-                    <td>IMU Voltage Override:</td>
+                    <td>Wake on Motion Detection:</td>
                     <td>
-                        <input type="checkbox"
-                               id="imu_voltage_override"
-                               name="imu_voltage_override"
-                               onchange="enableAutoStoreButton(); submit_enable();"
-                               checked>
+                        <select id="imu_voltage_override"
+                                name="imu_voltage_override"
+                                onchange="enableAutoStoreButton(); submit_enable();">
+                            <option value="disable">Disable</option>
+                            <option value="enable">Enable</option>
+                        </select>
                     </td>
                 </tr>
                 <tr id="disable_wifi_ble_on_pid_pause_row">
-                    <td>Enter Low Power State (disable WiFi/BLE/ELM/LED)</td>
+                    <td>Enter Low Power State (disable WiFi/BLE/ELM/LED):</td>
                     <td>
-                        <input type="checkbox"
-                               id="disable_wifi_ble_on_pid_pause"
-                               name="disable_wifi_ble_on_pid_pause"
-                               onchange="enableAutoStoreButton(); submit_enable();">
+                        <select id="disable_wifi_ble_on_pid_pause"
+                                name="disable_wifi_ble_on_pid_pause"
+                                onchange="enableAutoStoreButton(); submit_enable();">
+                            <option value="disable">Disable</option>
+                            <option value="enable">Enable</option>
+                        </select>
                     </td>
                 </tr>
                 <tr>

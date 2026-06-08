@@ -2299,14 +2299,12 @@ function loadAutoTable(jsonData) {
                 : '';
         }
         toggleSupplyModeSection();
-        const imuVoltageOverrideEl = document.getElementById("imu_voltage_override");
-        if (imuVoltageOverrideEl) {
-            imuVoltageOverrideEl.checked = data.imu_voltage_override === 'enable';
-        }
-        const disableWifiBleOnPidPauseEl = document.getElementById("disable_wifi_ble_on_pid_pause");
-        if (disableWifiBleOnPidPauseEl) {
-            disableWifiBleOnPidPauseEl.checked = data.disable_wifi_ble_on_pid_pause === 'enable';
-        }
+        setElementValue("imu_voltage_override",
+            (data.imu_voltage_override === 'enable' || data.imu_voltage_override === true) ? 'enable' : 'disable',
+            'disable');
+        setElementValue("disable_wifi_ble_on_pid_pause",
+            (data.disable_wifi_ble_on_pid_pause === 'enable' || data.disable_wifi_ble_on_pid_pause === true) ? 'enable' : 'disable',
+            'disable');
         const pidMinVoltEl = document.getElementById("pid_polling_min_voltage");
         const pidMinVoltValEl = document.getElementById("pid_polling_min_voltage_value");
         if (pidMinVoltEl && pidMinVoltValEl) pidMinVoltValEl.textContent = pidMinVoltEl.value;
@@ -2626,8 +2624,8 @@ async function storeAutoTableData() {
             }
             supplyModeCompareValue = n;
         }
-        const imuVoltageOverrideValue = document.getElementById("imu_voltage_override")?.checked ? 'enable' : 'disable';
-        const disableWifiBleOnPidPauseValue = document.getElementById("disable_wifi_ble_on_pid_pause")?.checked ? 'enable' : 'disable';
+        const imuVoltageOverrideValue = document.getElementById("imu_voltage_override")?.value || 'disable';
+        const disableWifiBleOnPidPauseValue = document.getElementById("disable_wifi_ble_on_pid_pause")?.value || 'disable';
         const pidPollingMinVoltageValueRaw = document.getElementById("pid_polling_min_voltage")?.value;
         const pidPollingMinVoltageValue = (() => {
             const n = parseFloat(pidPollingMinVoltageValueRaw);
