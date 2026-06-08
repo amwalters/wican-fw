@@ -244,6 +244,13 @@ typedef struct
     // Stored in auto_pid.json as: pid_polling_min_voltage = <number>.
     float pid_polling_min_voltage;
 
+    // Optional PID/value comparison that indicates external 12V supply mode and bypasses PID polling pause.
+    // Stored in auto_pid.json as: supply_mode_enabled, supply_mode_pid_name, supply_mode_operator, supply_mode_value.
+    bool supply_mode_enabled;
+    char *supply_mode_pid_name;
+    char supply_mode_operator[3];
+    float supply_mode_value;
+
     // When enabled, IMU activity and the post-motion hold timer override low-voltage PID polling pause.
     // Stored in auto_pid.json as: imu_voltage_override = "enable"/"disable".
     bool imu_voltage_override_enabled;

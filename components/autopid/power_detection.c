@@ -319,9 +319,52 @@ static void load_test_task(void *arg)
     vTaskDelete(NULL);
 }
 
-static bool is_12v_supply_mode(void)
+static bool supply_mode_compare_value(double actual, const char *op, double expected)
 {
-    char *ready_json = autopid_get_value_by_name("DCDC Input Current");
+    if (strcmp(op, "=") == 0 || strcmp(op, "==") == 0)
+    {
+        return fabs(actual - expected) < 0.00001;
+    }
+    if (strcmp(op, "<") == 0)
+    {
+        return actual < expected;
+    }
+    if (strcmp(op, ">") == 0)
+    {
+        return actual > expected;
+    }
+    if (strcmp(op, ">=") == 0)
+    {
+        return actual >= expected;
+    }
+    if (strcmp(op, "<=") == 0)
+    {
+        return actual <= expected;
+    }
+    if (strcmp(op, "!=") == 0)
+    {
+        return fabs(actual - expected) >= 0.00001;
+    }
+
+    return false;
+}
+
+static bool is_12v_supply_mode(const autopid_config_t *config)
+{
+    if (!config ||
+        !config->supply_mode_enabled ||
+        !config->supply_mode_pid_name ||
+        config->supply_mode_pid_name[0] == '\0' ||
+        config->supply_mode_operator[0] == '\0')
+    {
+        return false;
+    }
+
+    const char *pid_name = config->supply_mode_pid_name;
+    const char *op = config->supply_mode_operator;
+    double compare_value = config->supply_mode_value;
+
+    char *ready_json = autopid_get_value_by_name((char *)pid_name);
     bool running = false;
 
     if (ready_json)
@@ -334,9 +377,10 @@ static bool is_12v_supply_mode(void)
             {
                 if (cJSON_IsNumber(child))
                 {
-                    // DCDC Power Supply should be >0.0A when supplying power to the 12 system
-                    if (child->valuedouble > 0.0)
+                    if (supply_mode_compare_value(child->valuedouble, op, compare_value))
+                    {
                         running = true;
+                    }
                 }
                 child = child->next;
             }
@@ -485,14 +529,14 @@ static bool evaluate_pid_polling_pause(const autopid_config_t *config, float *ou
         return false;
     }
 
-    if (dev_status_is_autopid_wake_bypass_low_voltage())
-    {
-        if (out_reason)
-            *out_reason = "wakeup_poll";
-        return false;
-    }
+ //   if (dev_status_is_autopid_wake_bypass_low_voltage())
+ //   {
+ //       if (out_reason)
+ //           *out_reason = "wakeup_poll";
+ //       return false;
+ //   }
 
-    if (is_12v_supply_mode())
+    if (is_12v_supply_mode(config))
     {
         if (out_reason)
             *out_reason = "12v supply";

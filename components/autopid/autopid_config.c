@@ -51,6 +51,18 @@ static char *strdup_psram(const char *s) {
     return copy;
 }
 
+static bool supply_mode_operator_is_valid(const char *op)
+{
+    return op &&
+        (strcmp(op, "=") == 0 ||
+         strcmp(op, "==") == 0 ||
+         strcmp(op, "<") == 0 ||
+         strcmp(op, ">") == 0 ||
+         strcmp(op, ">=") == 0 ||
+         strcmp(op, "<=") == 0 ||
+         strcmp(op, "!=") == 0);
+}
+
 static void replace_atsp_with_attp(char *str) {
     if (!str) return;
     for (size_t i = 0; str[i] != '\0'; i++) {
@@ -436,6 +448,10 @@ static void parse_auto_pid_json(autopid_config_t *autopid_config, int *pid_index
     cJSON *ha_discovery_item = cJSON_GetObjectItem(root, "ha_discovery");
     cJSON *disable_on_sleep_voltage_item = cJSON_GetObjectItem(root, "disable_on_sleep_voltage");
     cJSON *pid_polling_min_voltage_item = cJSON_GetObjectItem(root, "pid_polling_min_voltage");
+    cJSON *supply_mode_enabled_item = cJSON_GetObjectItem(root, "supply_mode_enabled");
+    cJSON *supply_mode_pid_name_item = cJSON_GetObjectItem(root, "supply_mode_pid_name");
+    cJSON *supply_mode_operator_item = cJSON_GetObjectItem(root, "supply_mode_operator");
+    cJSON *supply_mode_value_item = cJSON_GetObjectItem(root, "supply_mode_value");
     cJSON *imu_voltage_override_item = cJSON_GetObjectItem(root, "imu_voltage_override");
     cJSON *disable_wifi_ble_on_pid_pause_item = cJSON_GetObjectItem(root, "disable_wifi_ble_on_pid_pause");
     cJSON *cycle_item = cJSON_GetObjectItem(root, "cycle");
@@ -506,6 +522,54 @@ static void parse_auto_pid_json(autopid_config_t *autopid_config, int *pid_index
         if (v >= 9.0f && v <= 18.0f)
         {
             autopid_config->pid_polling_min_voltage = v;
+        }
+    }
+
+    autopid_config->supply_mode_enabled = false;
+    if (supply_mode_enabled_item)
+    {
+        if (cJSON_IsString(supply_mode_enabled_item) && supply_mode_enabled_item->valuestring)
+        {
+            autopid_config->supply_mode_enabled = (strcmp(supply_mode_enabled_item->valuestring, "enable") == 0);
+        }
+        else if (cJSON_IsBool(supply_mode_enabled_item))
+        {
+            autopid_config->supply_mode_enabled = cJSON_IsTrue(supply_mode_enabled_item);
+        }
+    }
+
+    const char *supply_mode_pid_name = NULL;
+    if (supply_mode_pid_name_item &&
+        cJSON_IsString(supply_mode_pid_name_item) &&
+        supply_mode_pid_name_item->valuestring &&
+        supply_mode_pid_name_item->valuestring[0] != '\0')
+    {
+        supply_mode_pid_name = supply_mode_pid_name_item->valuestring;
+    }
+    autopid_config->supply_mode_pid_name = strdup_psram(supply_mode_pid_name);
+
+    autopid_config->supply_mode_operator[0] = '\0';
+    if (supply_mode_operator_item &&
+        cJSON_IsString(supply_mode_operator_item) &&
+        supply_mode_operator_item->valuestring &&
+        supply_mode_operator_is_valid(supply_mode_operator_item->valuestring))
+    {
+        strncpy(autopid_config->supply_mode_operator,
+                supply_mode_operator_item->valuestring,
+                sizeof(autopid_config->supply_mode_operator) - 1);
+        autopid_config->supply_mode_operator[sizeof(autopid_config->supply_mode_operator) - 1] = '\0';
+    }
+
+    autopid_config->supply_mode_value = 0.0f;
+    if (supply_mode_value_item)
+    {
+        if (cJSON_IsNumber(supply_mode_value_item))
+        {
+            autopid_config->supply_mode_value = (float)supply_mode_value_item->valuedouble;
+        }
+        else if (cJSON_IsString(supply_mode_value_item) && supply_mode_value_item->valuestring)
+        {
+            autopid_config->supply_mode_value = (float)atof(supply_mode_value_item->valuestring);
         }
     }
 

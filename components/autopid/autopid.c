@@ -2244,6 +2244,21 @@ char *autopid_get_config(void)
                 return NULL;
             }
 
+            cJSON_AddStringToObject(root, "supply_mode_enabled",
+                                    autopid_config->supply_mode_enabled ? "enable" : "disable");
+            if (autopid_config->supply_mode_pid_name && autopid_config->supply_mode_pid_name[0] != '\0')
+            {
+                cJSON_AddStringToObject(root, "supply_mode_pid_name", autopid_config->supply_mode_pid_name);
+            }
+            if (autopid_config->supply_mode_operator[0] != '\0')
+            {
+                cJSON_AddStringToObject(root, "supply_mode_operator", autopid_config->supply_mode_operator);
+            }
+            if (autopid_config->supply_mode_enabled)
+            {
+                cJSON_AddNumberToObject(root, "supply_mode_value", autopid_config->supply_mode_value);
+            }
+
             // 1. Export Groups (Primary Data Source for New UI)
             if (autopid_config->use_groups && autopid_config->group_count > 0)
             {

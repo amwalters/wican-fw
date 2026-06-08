@@ -2287,6 +2287,19 @@ function loadAutoTable(jsonData) {
         setElementValue("grouping", data.grouping, 'disable');
         setElementValue("disable_on_sleep_voltage", data.disable_on_sleep_voltage, 'disable');
         setElementValue("pid_polling_min_voltage", data.pid_polling_min_voltage, '13.1');
+        const supplyModeEnabledEl = document.getElementById("supply_mode_enabled");
+        if (supplyModeEnabledEl) {
+            supplyModeEnabledEl.checked = data.supply_mode_enabled === 'enable' || data.supply_mode_enabled === true;
+        }
+        populateSupplyModePidSelect(data, data.supply_mode_pid_name || '');
+        setElementValue("supply_mode_operator", data.supply_mode_operator, '');
+        const supplyModeValueEl = document.getElementById("supply_mode_value");
+        if (supplyModeValueEl) {
+            supplyModeValueEl.value = (data.supply_mode_value !== undefined && data.supply_mode_value !== null)
+                ? data.supply_mode_value
+                : '';
+        }
+        toggleSupplyModeSection();
         const imuVoltageOverrideEl = document.getElementById("imu_voltage_override");
         if (imuVoltageOverrideEl) {
             imuVoltageOverrideEl.checked = data.imu_voltage_override === 'enable';
@@ -2472,6 +2485,130 @@ function enableAutoStoreButton() {
     document.getElementById("custom_pid_store").disabled = false;
 }
 
+function collectAutoPidParameterNames(data) {
+    const names = new Set();
+    const addName = (name) => {
+        if (typeof name === 'string' && name.trim().length > 0) {
+            names.add(name.trim());
+        }
+    };
+
+    const visitPid = (pid) => {
+        if (!pid || typeof pid !== 'object') return;
+        addName(pid.name);
+        addName(pid.Name);
+        if (Array.isArray(pid.parameters)) {
+            pid.parameters.forEach((param) => {
+                addName(param?.name);
+                addName(param?.Name);
+            });
+        }
+    };
+
+    const visitFilter = (filter) => {
+        if (!filter || typeof filter !== 'object') return;
+        if (Array.isArray(filter.parameters)) {
+            filter.parameters.forEach((param) => {
+                addName(param?.name);
+                addName(param?.Name);
+            });
+        }
+        if (filter.parameter) {
+            addName(filter.parameter.name);
+            addName(filter.parameter.Name);
+        }
+    };
+
+    const visitCar = (car) => {
+        if (!car || typeof car !== 'object') return;
+        if (Array.isArray(car.pids)) car.pids.forEach(visitPid);
+        if (Array.isArray(car.can_filters)) car.can_filters.forEach(visitFilter);
+        if (Array.isArray(car.pid_groups)) {
+            car.pid_groups.forEach((group) => {
+                if (Array.isArray(group?.pids)) group.pids.forEach(visitPid);
+                if (Array.isArray(group?.can_filters)) group.can_filters.forEach(visitFilter);
+            });
+        }
+    };
+
+    if (Array.isArray(data?.pids)) data.pids.forEach(visitPid);
+    if (Array.isArray(data?.std_pids)) data.std_pids.forEach(visitPid);
+    if (Array.isArray(data?.can_filters)) data.can_filters.forEach(visitFilter);
+    if (Array.isArray(data?.pid_groups)) {
+        data.pid_groups.forEach((group) => {
+            if (Array.isArray(group?.pids)) group.pids.forEach(visitPid);
+            if (Array.isArray(group?.can_filters)) group.can_filters.forEach(visitFilter);
+        });
+    }
+    if (Array.isArray(data?.cars)) data.cars.forEach(visitCar);
+
+    return Array.from(names).sort((a, b) => a.localeCompare(b));
+}
+
+function populateSupplyModePidSelect(data, selectedName) {
+    const select = document.getElementById("supply_mode_pid_name");
+    if (!select) return;
+
+    const selected = selectedName || select.value || "";
+    const names = new Set(collectAutoPidParameterNames(data));
+    if (selected) names.add(selected);
+
+    select.innerHTML = '';
+    const blankOption = document.createElement('option');
+    blankOption.value = '';
+    blankOption.textContent = 'Select PID';
+    select.appendChild(blankOption);
+
+    Array.from(names)
+        .filter((name) => name && name.trim().length > 0)
+        .sort((a, b) => a.localeCompare(b))
+        .forEach((name) => {
+            const option = document.createElement('option');
+            option.value = name;
+            option.textContent = name;
+            select.appendChild(option);
+        });
+
+    select.value = selected;
+}
+
+function toggleSupplyModeCollapse(event, forceOpen = null) {
+    if (event) {
+        event.stopPropagation();
+    }
+
+    const content = document.getElementById("supply_mode_content");
+    const collapseBtn = document.getElementById("supply_mode_collapse_button");
+    if (!content) return;
+
+    const currentlyHidden = content.style.display === 'none';
+    const shouldHide = forceOpen === null ? !currentlyHidden : !forceOpen;
+
+    content.style.display = shouldHide ? 'none' : 'block';
+    if (collapseBtn) {
+        collapseBtn.textContent = shouldHide ? '▼' : '▲';
+    }
+}
+
+function toggleSupplyModeSection() {
+    const enabled = document.getElementById("supply_mode_enabled")?.checked === true;
+    const content = document.getElementById("supply_mode_content");
+    const controls = [
+        document.getElementById("supply_mode_pid_name"),
+        document.getElementById("supply_mode_operator"),
+        document.getElementById("supply_mode_value")
+    ];
+
+    if (content) content.style.opacity = enabled ? '1' : '0.45';
+    controls.forEach((control) => {
+        if (!control) return;
+        control.disabled = !enabled;
+        control.required = enabled;
+    });
+
+    toggleSupplyModeCollapse(null, enabled);
+}
+
 
 async function storeAutoTableData() {
     try {
@@ -2484,6 +2621,32 @@ async function storeAutoTableData() {
 
         const groupingValue = document.getElementById("grouping")?.value || 'disable';
         const disableOnSleepVoltageValue = document.getElementById("disable_on_sleep_voltage")?.value || 'automate_threshold';
+        const supplyModeEnabled = document.getElementById("supply_mode_enabled")?.checked === true;
+        const supplyModeEnabledValue = supplyModeEnabled ? 'enable' : 'disable';
+        const supplyModePidNameValue = supplyModeEnabled
+            ? (document.getElementById("supply_mode_pid_name")?.value || '').trim()
+            : '';
+        const supplyModeOperatorValue = supplyModeEnabled
+            ? (document.getElementById("supply_mode_operator")?.value || '').trim()
+            : '';
+        const supplyModeCompareValueRaw = document.getElementById("supply_mode_value")?.value;
+        let supplyModeCompareValue = null;
+        if (supplyModeEnabled) {
+            if (!supplyModePidNameValue) {
+                throw new Error("12V supply PID is required when supply mode is enabled");
+            }
+            if (!supplyModeOperatorValue) {
+                throw new Error("12V supply comparator is required when supply mode is enabled");
+            }
+            if (supplyModeCompareValueRaw === undefined || String(supplyModeCompareValueRaw).trim() === '') {
+                throw new Error("12V supply trigger value is required when supply mode is enabled");
+            }
+            const n = parseFloat(supplyModeCompareValueRaw);
+            if (!Number.isFinite(n)) {
+                throw new Error("12V supply trigger value must be a number");
+            }
+            supplyModeCompareValue = n;
+        }
         const imuVoltageOverrideValue = document.getElementById("imu_voltage_override")?.checked ? 'enable' : 'disable';
         const disableWifiBleOnPidPauseValue = document.getElementById("disable_wifi_ble_on_pid_pause")?.checked ? 'enable' : 'disable';
         const pidPollingMinVoltageValueRaw = document.getElementById("pid_polling_min_voltage")?.value;
@@ -2773,6 +2936,10 @@ async function storeAutoTableData() {
         const jsonData = {
             grouping: groupingValue,
             disable_on_sleep_voltage: disableOnSleepVoltageValue,
+            supply_mode_enabled: supplyModeEnabledValue,
+            supply_mode_pid_name: supplyModePidNameValue,
+            supply_mode_operator: supplyModeOperatorValue,
+            supply_mode_value: supplyModeCompareValue,
             imu_voltage_override: imuVoltageOverrideValue,
             disable_wifi_ble_on_pid_pause: disableWifiBleOnPidPauseValue,
             pid_polling_min_voltage: pidPollingMinVoltageValue,
