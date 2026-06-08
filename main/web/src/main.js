@@ -2287,11 +2287,10 @@ function loadAutoTable(jsonData) {
         setElementValue("grouping", data.grouping, 'disable');
         setElementValue("disable_on_sleep_voltage", data.disable_on_sleep_voltage, 'disable');
         setElementValue("pid_polling_min_voltage", data.pid_polling_min_voltage, '13.1');
-        const supplyModeEnabledEl = document.getElementById("supply_mode_enabled");
-        if (supplyModeEnabledEl) {
-            supplyModeEnabledEl.checked = data.supply_mode_enabled === 'enable' || data.supply_mode_enabled === true;
-        }
-        populateSupplyModePidSelect(data, data.supply_mode_pid_name || '');
+        const supplyModeSelectedPid = (data.supply_mode_enabled === 'enable' || data.supply_mode_enabled === true)
+            ? (data.supply_mode_pid_name || '')
+            : '';
+        populateSupplyModePidSelect(data, supplyModeSelectedPid);
         setElementValue("supply_mode_operator", data.supply_mode_operator, '');
         const supplyModeValueEl = document.getElementById("supply_mode_value");
         if (supplyModeValueEl) {
@@ -2554,10 +2553,10 @@ function populateSupplyModePidSelect(data, selectedName) {
     if (selected) names.add(selected);
 
     select.innerHTML = '';
-    const blankOption = document.createElement('option');
-    blankOption.value = '';
-    blankOption.textContent = 'Select PID';
-    select.appendChild(blankOption);
+    const disabledOption = document.createElement('option');
+    disabledOption.value = '';
+    disabledOption.textContent = 'Disabled';
+    select.appendChild(disabledOption);
 
     Array.from(names)
         .filter((name) => name && name.trim().length > 0)
@@ -2572,41 +2571,20 @@ function populateSupplyModePidSelect(data, selectedName) {
     select.value = selected;
 }
 
-function toggleSupplyModeCollapse(event, forceOpen = null) {
-    if (event) {
-        event.stopPropagation();
-    }
-
-    const content = document.getElementById("supply_mode_content");
-    const collapseBtn = document.getElementById("supply_mode_collapse_button");
-    if (!content) return;
-
-    const currentlyHidden = content.style.display === 'none';
-    const shouldHide = forceOpen === null ? !currentlyHidden : !forceOpen;
-
-    content.style.display = shouldHide ? 'none' : 'block';
-    if (collapseBtn) {
-        collapseBtn.textContent = shouldHide ? '▼' : '▲';
-    }
-}
-
 function toggleSupplyModeSection() {
-    const enabled = document.getElementById("supply_mode_enabled")?.checked === true;
-    const content = document.getElementById("supply_mode_content");
+    const enabled = (document.getElementById("supply_mode_pid_name")?.value || '').trim().length > 0;
+    const compareControls = document.getElementById("supply_mode_compare_controls");
     const controls = [
-        document.getElementById("supply_mode_pid_name"),
         document.getElementById("supply_mode_operator"),
         document.getElementById("supply_mode_value")
     ];
 
-    if (content) content.style.opacity = enabled ? '1' : '0.45';
+    if (compareControls) compareControls.style.opacity = enabled ? '1' : '0.45';
     controls.forEach((control) => {
         if (!control) return;
         control.disabled = !enabled;
         control.required = enabled;
     });
-
-    toggleSupplyModeCollapse(null, enabled);
 }
 
 
@@ -2621,10 +2599,11 @@ async function storeAutoTableData() {
 
         const groupingValue = document.getElementById("grouping")?.value || 'disable';
         const disableOnSleepVoltageValue = document.getElementById("disable_on_sleep_voltage")?.value || 'automate_threshold';
-        const supplyModeEnabled = document.getElementById("supply_mode_enabled")?.checked === true;
+        const supplyModePidNameRaw = (document.getElementById("supply_mode_pid_name")?.value || '').trim();
+        const supplyModeEnabled = supplyModePidNameRaw.length > 0;
         const supplyModeEnabledValue = supplyModeEnabled ? 'enable' : 'disable';
         const supplyModePidNameValue = supplyModeEnabled
-            ? (document.getElementById("supply_mode_pid_name")?.value || '').trim()
+            ? supplyModePidNameRaw
             : '';
         const supplyModeOperatorValue = supplyModeEnabled
             ? (document.getElementById("supply_mode_operator")?.value || '').trim()
