@@ -681,6 +681,22 @@ void app_main(void)
 	gpio_set_direction(4, GPIO_MODE_INPUT);
 	gpio_pullup_dis(4);
 	gpio_pulldown_dis(4);
+
+    ESP_ERROR_CHECK(esp_read_mac(derived_mac_addr, ESP_MAC_WIFI_SOFTAP));
+    sprintf((char *)ble_uid,"WiC_%02x%02x%02x%02x%02x%02x",
+            derived_mac_addr[0], derived_mac_addr[1], derived_mac_addr[2],
+            derived_mac_addr[3], derived_mac_addr[4], derived_mac_addr[5]);
+
+    sprintf((char *)uid,"%02x%02x%02x%02x%02x%02x",
+            derived_mac_addr[0], derived_mac_addr[1], derived_mac_addr[2],
+            derived_mac_addr[3], derived_mac_addr[4], derived_mac_addr[5]);
+
+    sprintf(ap_ssid, "WiCAN_%02x%02x%02x%02x%02x%02x",
+			derived_mac_addr[0], derived_mac_addr[1], derived_mac_addr[2],
+			derived_mac_addr[3], derived_mac_addr[4], derived_mac_addr[5]);
+
+	restart_tracker_init();
+	config_server_preload_config((char*)&uid[0]);
 	
 	#if HARDWARE_VER == WICAN_PRO
 	imu_wom_settings_t imu_settings;
@@ -707,8 +723,6 @@ void app_main(void)
 	// rtcm_set_time(0x23, 0x32, 0x00);  // 12:30:00 in BCD
 	// rtcm_set_date(0x24, 0x12, 0x27, 0x06);  // 2024-01-20 Saturday(6) in BCD	
 	#endif
-
-	restart_tracker_init();
 
 	gpio_reset_pin(0);
 	gpio_set_direction(0, GPIO_MODE_INPUT);
@@ -808,19 +822,6 @@ void app_main(void)
 
 	esp_ota_mark_app_valid_cancel_rollback();
 //    xmsg_obd_rx_queue = xQueueCreate(100, sizeof( twai_message_t) );
-
-    ESP_ERROR_CHECK(esp_read_mac(derived_mac_addr, ESP_MAC_WIFI_SOFTAP));
-    sprintf((char *)ble_uid,"WiC_%02x%02x%02x%02x%02x%02x",
-            derived_mac_addr[0], derived_mac_addr[1], derived_mac_addr[2],
-            derived_mac_addr[3], derived_mac_addr[4], derived_mac_addr[5]);
-
-    sprintf((char *)uid,"%02x%02x%02x%02x%02x%02x",
-            derived_mac_addr[0], derived_mac_addr[1], derived_mac_addr[2],
-            derived_mac_addr[3], derived_mac_addr[4], derived_mac_addr[5]);
-
-    sprintf(ap_ssid, "WiCAN_%02x%02x%02x%02x%02x%02x",
-			derived_mac_addr[0], derived_mac_addr[1], derived_mac_addr[2],
-			derived_mac_addr[3], derived_mac_addr[4], derived_mac_addr[5]);
 			
 	#if HARDWARE_VER == WICAN_V300 || HARDWARE_VER == WICAN_USB_V100
 		config_server_start(&xmsg_ws_tx_queue, &xMsg_Rx_Queue, CONNECTED_LED_GPIO_NUM, (char*)&uid[0]);

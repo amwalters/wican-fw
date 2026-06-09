@@ -3806,6 +3806,69 @@ config_error_no_json:
 					 RESTART_TRACKER_FLAG_SETTINGS_SAVED | RESTART_TRACKER_FLAG_RECOVERY_ACTION);
 }
 
+static void config_server_load_config_file(bool create_default_if_missing)
+{
+	FILE* f = fopen(FS_MOUNT_POINT"/config.json", "r");
+	if (f == NULL)
+	{
+		if (!create_default_if_missing)
+		{
+			ESP_LOGI(TAG, "Config file does not exist, using defaults for early config preload");
+			return;
+		}
+
+		ESP_LOGI(TAG, "Config file does not exist, loading default");
+		f = fopen(FS_MOUNT_POINT"/config.json", "w");
+		if (f != NULL)
+		{
+			fprintf(f, device_config_default, (char*)device_id, (char*)device_id, (char*)device_id);
+			fclose(f);
+			f = fopen(FS_MOUNT_POINT"/config.json", "r");
+			ESP_LOGW(TAG, "Config file trying to load again");
+		}
+	}
+
+	if (f != NULL)
+	{
+		fseek(f, 0, SEEK_END);
+		long filesize = ftell(f);
+		fseek(f, 0, SEEK_SET);
+
+		if (device_config_file != NULL)
+		{
+			heap_caps_free(device_config_file);
+			device_config_file = NULL;
+		}
+
+		device_config_file = heap_caps_malloc(filesize + 1, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+		if (device_config_file != NULL)
+		{
+			memset(device_config_file, 0, filesize + 1);
+			fread(device_config_file, sizeof(char), filesize, f);
+			device_config_file[filesize] = 0;
+			ESP_LOGI(TAG, "config.json: %s", device_config_file);
+			fclose(f);	//close file after reading, config_server_load_cfg might unlink it
+			config_server_load_cfg(device_config_file);
+		}
+		else
+		{
+			ESP_LOGE(TAG, "Failed to allocate memory for config file");
+			fclose(f);
+		}
+	}
+}
+
+void config_server_preload_config(char *did)
+{
+	if (did != NULL)
+	{
+		device_id = did;
+	}
+
+	filesystem_init();
+	config_server_load_config_file(false);
+}
+
 void config_server_wifi_connected(bool flag)
 {
 	if(flag)
@@ -3955,47 +4018,10 @@ static httpd_handle_t config_server_init(void)
 		cert_manager_init();
 		// Initialize VPN manager
 		vpn_manager_init();
-		// Handle config.json
-		FILE* f = fopen(FS_MOUNT_POINT"/config.json", "r");
-		if (f == NULL)
-		{
-			ESP_LOGI(TAG, "Config file does not exist, loading default");
-			f = fopen(FS_MOUNT_POINT"/config.json", "w");
-			if (f != NULL)
-			{
-				fprintf(f, device_config_default, (char*)device_id, (char*)device_id, (char*)device_id);
-				fclose(f);
-				f = fopen(FS_MOUNT_POINT"/config.json", "r");
-				ESP_LOGW(TAG, "Config file trying to load again");
-			}
-		}
-
-		if (f != NULL)
-		{
-			fseek(f, 0, SEEK_END);
-			long filesize = ftell(f);
-			fseek(f, 0, SEEK_SET);
-
-			device_config_file = heap_caps_malloc(filesize + 1, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
-			if (device_config_file != NULL)
-			{
-				memset(device_config_file, 0, filesize + 1);
-				fread(device_config_file, sizeof(char), filesize, f);
-				device_config_file[filesize] = 0;
-				ESP_LOGI(TAG, "config.json: %s", device_config_file);
-				fclose(f);	//close file after reading, config_server_load_cfg might unlink it
-				config_server_load_cfg(device_config_file);
-			}
-			else
-			{
-				ESP_LOGE(TAG, "Failed to allocate memory for config file");
-				fclose(f);
-			}
-			
-		}
+		config_server_load_config_file(true);
 
 		// Handle mqtt_canfilt.json
-		f = fopen(FS_MOUNT_POINT"/mqtt_canfilt.json", "r");
+		FILE* f = fopen(FS_MOUNT_POINT"/mqtt_canfilt.json", "r");
 		if (f != NULL)
 		{
 			fseek(f, 0, SEEK_END);
