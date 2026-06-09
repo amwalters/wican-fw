@@ -102,6 +102,7 @@
 #include "restart_tracker.h"
 #include "restart_tracker_http.h"
 #include "icm42670.h"
+#include "imu.h"
 
 #include <ws_router.h>
 #include "ws_server.h"
@@ -2080,6 +2081,121 @@ static esp_err_t check_status_handler(httpd_req_t *req)
     return ESP_OK;
 }
 
+static const char *config_server_activity_state_to_str(activity_state_t state)
+{
+	switch (state)
+	{
+	case ACTIVITY_STATE_STATIONARY:
+		return "stationary";
+	case ACTIVITY_STATE_ACTIVE:
+		return "active";
+	default:
+		return "invalid";
+	}
+}
+
+static esp_err_t imu_state_handler(httpd_req_t *req)
+{
+	imu_register_state_t state = {0};
+	esp_err_t ret = imu_read_register_state(&state);
+	cJSON *root = cJSON_CreateObject();
+
+	if (!root)
+	{
+		httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to allocate JSON");
+		return ESP_ERR_NO_MEM;
+	}
+
+	httpd_resp_set_type(req, "application/json");
+
+	if (ret != ESP_OK)
+	{
+		cJSON_AddBoolToObject(root, "ok", false);
+		cJSON_AddStringToObject(root, "error", esp_err_to_name(ret));
+		char *resp_str = cJSON_PrintUnformatted(root);
+		cJSON_Delete(root);
+		if (!resp_str)
+		{
+			httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to allocate response");
+			return ESP_ERR_NO_MEM;
+		}
+		httpd_resp_set_status(req, "500 Internal Server Error");
+		httpd_resp_send(req, resp_str, HTTPD_RESP_USE_STRLEN);
+		free(resp_str);
+		return ESP_OK;
+	}
+
+	cJSON_AddBoolToObject(root, "ok", true);
+
+	cJSON *registers = cJSON_AddObjectToObject(root, "registers");
+	if (registers)
+	{
+		cJSON_AddNumberToObject(registers, "WHO_AM_I", state.who_am_i);
+		cJSON_AddNumberToObject(registers, "MCLK_RDY", state.mclk_rdy);
+		cJSON_AddNumberToObject(registers, "PWR_MGMT0", state.pwr_mgmt0);
+		cJSON_AddNumberToObject(registers, "INT_CONFIG", state.int_config);
+		cJSON_AddNumberToObject(registers, "INT_SOURCE1", state.int_source1);
+		cJSON_AddNumberToObject(registers, "WOM_CONFIG", state.wom_config);
+		cJSON_AddNumberToObject(registers, "ACCEL_CONFIG0", state.accel_config0);
+		cJSON_AddNumberToObject(registers, "ACCEL_CONFIG1", state.accel_config1);
+		cJSON_AddNumberToObject(registers, "APEX_CONFIG1", state.apex_config1);
+		cJSON_AddNumberToObject(registers, "INT_STATUS2_CACHED", state.int_status2_cached);
+		cJSON_AddNumberToObject(registers, "ACCEL_WOM_X_THR", state.accel_wom_x_thr);
+		cJSON_AddNumberToObject(registers, "ACCEL_WOM_Y_THR", state.accel_wom_y_thr);
+		cJSON_AddNumberToObject(registers, "ACCEL_WOM_Z_THR", state.accel_wom_z_thr);
+	}
+
+	cJSON *configured = cJSON_AddObjectToObject(root, "configured");
+	if (configured)
+	{
+		cJSON_AddNumberToObject(configured, "threshold", state.configured_settings.threshold);
+		cJSON_AddNumberToObject(configured, "threshold_mg", state.configured_settings.threshold * 1000.0f / 256.0f);
+		cJSON_AddBoolToObject(configured, "wom_x_enabled", state.configured_settings.wom_x_enabled);
+		cJSON_AddBoolToObject(configured, "wom_y_enabled", state.configured_settings.wom_y_enabled);
+		cJSON_AddBoolToObject(configured, "wom_z_enabled", state.configured_settings.wom_z_enabled);
+		cJSON_AddBoolToObject(configured, "smd_enabled", state.configured_settings.smd_enabled);
+		cJSON_AddNumberToObject(configured, "accel_odr", state.configured_settings.accel_odr);
+		cJSON_AddNumberToObject(configured, "accel_avg", state.configured_settings.accel_avg);
+		cJSON_AddNumberToObject(configured, "wom_int_dur", state.configured_settings.wom_int_dur);
+		cJSON_AddNumberToObject(configured, "wom_int_mode", state.configured_settings.wom_int_mode);
+		cJSON_AddNumberToObject(configured, "wom_ref_mode", state.configured_settings.wom_ref_mode);
+	}
+
+	cJSON *runtime = cJSON_AddObjectToObject(root, "runtime");
+	if (runtime)
+	{
+		cJSON_AddStringToObject(runtime, "activity_state", config_server_activity_state_to_str(state.activity_state));
+		cJSON_AddNumberToObject(runtime, "wom_x_count", state.wom_x_count);
+		cJSON_AddNumberToObject(runtime, "wom_y_count", state.wom_y_count);
+		cJSON_AddNumberToObject(runtime, "wom_z_count", state.wom_z_count);
+		cJSON_AddNumberToObject(runtime, "last_active_ms", state.last_active_ms);
+	}
+
+	cJSON *accel = cJSON_AddObjectToObject(root, "accel");
+	if (accel)
+	{
+		cJSON_AddBoolToObject(accel, "valid", state.accel_valid);
+		if (state.accel_valid)
+		{
+			cJSON_AddNumberToObject(accel, "x_g", state.accel_x);
+			cJSON_AddNumberToObject(accel, "y_g", state.accel_y);
+			cJSON_AddNumberToObject(accel, "z_g", state.accel_z);
+		}
+	}
+
+	char *resp_str = cJSON_PrintUnformatted(root);
+	cJSON_Delete(root);
+	if (!resp_str)
+	{
+		httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to allocate response");
+		return ESP_ERR_NO_MEM;
+	}
+
+	httpd_resp_send(req, resp_str, HTTPD_RESP_USE_STRLEN);
+	free(resp_str);
+	return ESP_OK;
+}
+
 typedef struct {
 	esp_ota_handle_t update_handle;
 	const esp_partition_t *update_partition;
@@ -2517,6 +2633,12 @@ static const httpd_uri_t load_test_status_uri = {
 	.uri       = "/api/load_test_status",
 	.method    = HTTP_GET,
 	.handler   = load_test_status_handler,
+	.user_ctx  = NULL
+};
+static const httpd_uri_t imu_state_uri = {
+	.uri       = "/api/imu_state",
+	.method    = HTTP_GET,
+	.handler   = imu_state_handler,
 	.user_ctx  = NULL
 };
 static const httpd_uri_t check_status_uri = {
@@ -3744,6 +3866,7 @@ static void register_server_uris(void)
 	httpd_register_uri_handler(server, &load_car_config_uri);
 	httpd_register_uri_handler(server, &destinations_stats_uri);
 	httpd_register_uri_handler(server, &load_test_status_uri);
+	httpd_register_uri_handler(server, &imu_state_uri);
 	httpd_register_uri_handler(server, &store_car_data_uri);
 	httpd_register_uri_handler(server, &system_commands);
 	httpd_register_uri_handler(server, &scan_available_pids_uri);
@@ -3911,7 +4034,7 @@ static httpd_handle_t config_server_init(void)
                        );
 
 	// Start the httpd server (reserve extra slots for cert manager endpoints)
-	config.max_uri_handlers = 38;
+	config.max_uri_handlers = 40;
 	config.stack_size = (10*1024);
 	config.max_open_sockets = 8;
     ESP_LOGI(TAG, "Starting server on port: '%d'", config.server_port);

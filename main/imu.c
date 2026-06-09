@@ -30,6 +30,7 @@
 #include "dev_status.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
+#include <string.h>
 
 #define TAG "imu"
 #define STATIONARY_TIME_MS      3000
@@ -38,6 +39,7 @@ static icm42670_t dev = {0};
 static QueueHandle_t imu_motion_evt_queue = NULL;
 static QueueHandle_t activity_state_queue = NULL;
 static imu_wom_settings_t imu_wom_settings;
+static bool imu_initialized = false;
 static volatile uint8_t imu_last_int_status2 = 0;
 static volatile uint32_t imu_wom_x_count = 0;
 static volatile uint32_t imu_wom_y_count = 0;
@@ -271,6 +273,7 @@ esp_err_t imu_init(i2c_port_t i2c_num, gpio_num_t sda_gpio, gpio_num_t scl_gpio,
         ESP_LOGE(TAG, "Failed to init device");
         return ret;
     }
+    imu_initialized = true;
 
     // Configure default settings
     ret = icm42670_set_gyro_fsr(&dev, ICM42670_GYRO_RANGE_2000DPS);
@@ -398,6 +401,57 @@ esp_err_t imu_enable_wom(bool enable)
     if (ret != ESP_OK) return ret;
 
     return icm42670_enable_wom(&dev, false);
+}
+
+esp_err_t imu_read_register_state(imu_register_state_t *state)
+{
+    if (state == NULL)
+    {
+        return ESP_ERR_INVALID_ARG;
+    }
+    if (!imu_initialized)
+    {
+        return ESP_ERR_INVALID_STATE;
+    }
+
+    memset(state, 0, sizeof(*state));
+    state->configured_settings = imu_wom_settings;
+    state->int_status2_cached = imu_get_last_int_status2();
+    state->wom_x_count = imu_get_wom_x_count();
+    state->wom_y_count = imu_get_wom_y_count();
+    state->wom_z_count = imu_get_wom_z_count();
+    state->last_active_ms = imu_get_last_active_ms();
+    state->activity_state = imu_get_activity_state();
+
+    esp_err_t ret = icm42670_read_register(&dev, ICM42670_REG_WHO_AM_I, &state->who_am_i);
+    if (ret != ESP_OK) return ret;
+    ret = icm42670_read_register(&dev, ICM42670_REG_MCLK_RDY, &state->mclk_rdy);
+    if (ret != ESP_OK) return ret;
+    ret = icm42670_read_register(&dev, ICM42670_REG_PWR_MGMT0, &state->pwr_mgmt0);
+    if (ret != ESP_OK) return ret;
+    ret = icm42670_read_register(&dev, ICM42670_REG_INT_CONFIG, &state->int_config);
+    if (ret != ESP_OK) return ret;
+    ret = icm42670_read_register(&dev, ICM42670_REG_INT_SOURCE1, &state->int_source1);
+    if (ret != ESP_OK) return ret;
+    ret = icm42670_read_register(&dev, ICM42670_REG_WOM_CONFIG, &state->wom_config);
+    if (ret != ESP_OK) return ret;
+    ret = icm42670_read_register(&dev, ICM42670_REG_ACCEL_CONFIG0, &state->accel_config0);
+    if (ret != ESP_OK) return ret;
+    ret = icm42670_read_register(&dev, ICM42670_REG_ACCEL_CONFIG1, &state->accel_config1);
+    if (ret != ESP_OK) return ret;
+    ret = icm42670_read_register(&dev, ICM42670_REG_APEX_CONFIG1, &state->apex_config1);
+    if (ret != ESP_OK) return ret;
+
+    ret = icm42670_read_mreg_register(&dev, ICM42670_MREG1_RW, ICM42670_REG_ACCEL_WOM_X_THR, &state->accel_wom_x_thr);
+    if (ret != ESP_OK) return ret;
+    ret = icm42670_read_mreg_register(&dev, ICM42670_MREG1_RW, ICM42670_REG_ACCEL_WOM_Y_THR, &state->accel_wom_y_thr);
+    if (ret != ESP_OK) return ret;
+    ret = icm42670_read_mreg_register(&dev, ICM42670_MREG1_RW, ICM42670_REG_ACCEL_WOM_Z_THR, &state->accel_wom_z_thr);
+    if (ret != ESP_OK) return ret;
+
+    state->accel_valid = (imu_read_accel(&state->accel_x, &state->accel_y, &state->accel_z) == ESP_OK);
+
+    return ESP_OK;
 }
 
 esp_err_t imu_read_accel(float *ax, float *ay, float *az)

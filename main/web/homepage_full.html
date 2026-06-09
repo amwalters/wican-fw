@@ -2320,6 +2320,16 @@
                     </td>
                 </tr>
                 <tr>
+                    <td>Read IMU State:</td>
+                    <td><input id="read_imu_state_button" name="read_imu_state_button" type="button" onclick="readImuState()" value="Read IMU State" class="system-button" /></td>
+                </tr>
+                <tr id="imu_state_output_row" style="display:none;">
+                    <td></td>
+                    <td>
+                        <div id="imu_state_output" style="background:var(--gray-100); border:1px solid var(--gray-300); border-radius:6px; padding:0.75rem; font-size:0.85rem; font-weight:400; overflow:auto;"></div>
+                    </td>
+                </tr>
+                <tr>
                     <td>ELM327 UDP Log:</td>
                     <td>
                         <select id="elm327_udp_log" name="elm327_udp_log" onchange="toggleElm327UdpLogWarning();submit_enable();">

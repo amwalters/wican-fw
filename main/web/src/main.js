@@ -3494,6 +3494,174 @@ function configurePeriodicWakeup(elements) {
     }
 }
 
+function imuHexByte(value) {
+    if (value === undefined || value === null || !Number.isFinite(Number(value))) return "N/A";
+    return "0x" + (Number(value) & 0xFF).toString(16).toUpperCase().padStart(2, "0");
+}
+
+function imuEscapeHtml(value) {
+    return String(value ?? "").replace(/[&<>"']/g, (ch) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+    }[ch]));
+}
+
+function imuBoolText(value) {
+    return value ? "yes" : "no";
+}
+
+function imuAccelOdrText(value) {
+    const map = {
+        5: "1.6 kHz (LN)",
+        6: "800 Hz (LN)",
+        7: "400 Hz",
+        8: "200 Hz",
+        9: "100 Hz",
+        10: "50 Hz",
+        11: "25 Hz",
+        12: "12.5 Hz",
+        13: "6.25 Hz",
+        14: "3.125 Hz",
+        15: "1.5625 Hz"
+    };
+    return map[Number(value)] || `reserved (${value})`;
+}
+
+function imuAccelAvgText(value) {
+    const map = {
+        0: "2x",
+        1: "4x",
+        2: "8x",
+        3: "16x",
+        4: "32x",
+        5: "64x",
+        6: "64x",
+        7: "64x"
+    };
+    return map[Number(value)] || `unknown (${value})`;
+}
+
+function imuWomDurText(value) {
+    const map = {
+        0: "first overthreshold event",
+        1: "second overthreshold event",
+        2: "third overthreshold event",
+        3: "fourth overthreshold event"
+    };
+    return map[Number(value)] || `unknown (${value})`;
+}
+
+function imuAccelModeText(value) {
+    const map = {
+        0: "off",
+        1: "off",
+        2: "low power",
+        3: "low noise"
+    };
+    return map[Number(value)] || `unknown (${value})`;
+}
+
+function imuGyroModeText(value) {
+    const map = {
+        0: "off",
+        1: "standby",
+        2: "reserved",
+        3: "low noise"
+    };
+    return map[Number(value)] || `unknown (${value})`;
+}
+
+function imuThresholdMg(value) {
+    if (value === undefined || value === null || !Number.isFinite(Number(value))) return "N/A";
+    return (Number(value) * 1000 / 256).toFixed(1) + " mg";
+}
+
+function imuRegisterRow(name, value, decoded) {
+    return `<tr><td style="padding:4px 8px; white-space:nowrap;"><code>${imuEscapeHtml(name)}</code></td><td style="padding:4px 8px; white-space:nowrap;"><code>${imuEscapeHtml(imuHexByte(value))}</code></td><td style="padding:4px 8px;">${imuEscapeHtml(decoded)}</td></tr>`;
+}
+
+function renderImuState(data) {
+    const r = data.registers || {};
+    const configured = data.configured || {};
+    const runtime = data.runtime || {};
+    const accel = data.accel || {};
+
+    const womConfig = Number(r.WOM_CONFIG || 0);
+    const intSource1 = Number(r.INT_SOURCE1 || 0);
+    const accelConfig0 = Number(r.ACCEL_CONFIG0 || 0);
+    const accelConfig1 = Number(r.ACCEL_CONFIG1 || 0);
+    const pwrMgmt0 = Number(r.PWR_MGMT0 || 0);
+    const intConfig = Number(r.INT_CONFIG || 0);
+    const apexConfig1 = Number(r.APEX_CONFIG1 || 0);
+    const mclkRdy = Number(r.MCLK_RDY || 0);
+    const intStatus2Cached = Number(r.INT_STATUS2_CACHED || 0);
+
+    const rows = [
+        imuRegisterRow("WHO_AM_I", r.WHO_AM_I, Number(r.WHO_AM_I) === 0x67 ? "ICM-42670-P detected" : "unexpected device id"),
+        imuRegisterRow("MCLK_RDY", r.MCLK_RDY, `MCLK ready: ${imuBoolText((mclkRdy & 0x08) !== 0)}`),
+        imuRegisterRow("PWR_MGMT0", r.PWR_MGMT0, `accel: ${imuAccelModeText(pwrMgmt0 & 0x03)}, gyro: ${imuGyroModeText((pwrMgmt0 >> 2) & 0x03)}, LP clock: ${(pwrMgmt0 & 0x80) ? "RC oscillator" : "wake-up oscillator"}`),
+        imuRegisterRow("INT_CONFIG", r.INT_CONFIG, `INT1: ${((intConfig >> 2) & 1) ? "latched" : "pulsed"}, ${((intConfig >> 1) & 1) ? "push-pull" : "open-drain"}, ${(intConfig & 1) ? "active-high" : "active-low"}`),
+        imuRegisterRow("INT_SOURCE1", r.INT_SOURCE1, `INT1 routes: SMD=${imuBoolText((intSource1 & 0x08) !== 0)}, X=${imuBoolText((intSource1 & 0x01) !== 0)}, Y=${imuBoolText((intSource1 & 0x02) !== 0)}, Z=${imuBoolText((intSource1 & 0x04) !== 0)}`),
+        imuRegisterRow("WOM_CONFIG", r.WOM_CONFIG, `enabled: ${imuBoolText((womConfig & 0x01) !== 0)}, duration: ${imuWomDurText((womConfig >> 3) & 0x03)}, mode: ${((womConfig >> 2) & 1) ? "AND" : "OR"}, ref: ${((womConfig >> 1) & 1) ? "LAST" : "INITIAL"}`),
+        imuRegisterRow("ACCEL_CONFIG0", r.ACCEL_CONFIG0, `FSR: ${["16g", "8g", "4g", "2g"][(accelConfig0 >> 5) & 0x03]}, ODR: ${imuAccelOdrText(accelConfig0 & 0x0F)}`),
+        imuRegisterRow("ACCEL_CONFIG1", r.ACCEL_CONFIG1, `LP avg: ${imuAccelAvgText((accelConfig1 >> 4) & 0x07)}, filter code: ${accelConfig1 & 0x07}`),
+        imuRegisterRow("APEX_CONFIG1", r.APEX_CONFIG1, `SMD enabled: ${imuBoolText((apexConfig1 & 0x40) !== 0)}, DMP ODR code: ${apexConfig1 & 0x03}`),
+        imuRegisterRow("INT_STATUS2_CACHED", r.INT_STATUS2_CACHED, `cached last trigger: SMD=${imuBoolText((intStatus2Cached & 0x08) !== 0)}, X=${imuBoolText((intStatus2Cached & 0x04) !== 0)}, Y=${imuBoolText((intStatus2Cached & 0x02) !== 0)}, Z=${imuBoolText((intStatus2Cached & 0x01) !== 0)}`),
+        imuRegisterRow("ACCEL_WOM_X_THR", r.ACCEL_WOM_X_THR, imuThresholdMg(r.ACCEL_WOM_X_THR)),
+        imuRegisterRow("ACCEL_WOM_Y_THR", r.ACCEL_WOM_Y_THR, imuThresholdMg(r.ACCEL_WOM_Y_THR)),
+        imuRegisterRow("ACCEL_WOM_Z_THR", r.ACCEL_WOM_Z_THR, imuThresholdMg(r.ACCEL_WOM_Z_THR))
+    ];
+
+    const configuredText = [
+        `threshold ${configured.threshold ?? "N/A"} (${configured.threshold_mg !== undefined ? Number(configured.threshold_mg).toFixed(1) + " mg" : "N/A"})`,
+        `sources X=${imuBoolText(configured.wom_x_enabled)} Y=${imuBoolText(configured.wom_y_enabled)} Z=${imuBoolText(configured.wom_z_enabled)} SMD=${imuBoolText(configured.smd_enabled)}`,
+        `ODR ${imuAccelOdrText(configured.accel_odr)}, avg ${imuAccelAvgText(configured.accel_avg)}, duration ${imuWomDurText(configured.wom_int_dur)}, mode ${Number(configured.wom_int_mode) ? "AND" : "OR"}, ref ${Number(configured.wom_ref_mode) ? "LAST" : "INITIAL"}`
+    ].join("; ");
+
+    const accelText = accel.valid
+        ? `accel X=${Number(accel.x_g).toFixed(3)}g Y=${Number(accel.y_g).toFixed(3)}g Z=${Number(accel.z_g).toFixed(3)}g`
+        : "accel read unavailable";
+
+    return `
+        <div style="margin-bottom:0.5rem;"><b>IMU State</b></div>
+        <table style="border-collapse:collapse; width:100%; margin-bottom:0.75rem;">
+            <thead><tr><th style="text-align:left; padding:4px 8px;">Register</th><th style="text-align:left; padding:4px 8px;">Value</th><th style="text-align:left; padding:4px 8px;">Decoded</th></tr></thead>
+            <tbody>${rows.join("")}</tbody>
+        </table>
+        <div><b>Configured:</b> ${imuEscapeHtml(configuredText)}</div>
+        <div><b>Runtime:</b> activity ${imuEscapeHtml(runtime.activity_state || "N/A")}; counts X=${Number(runtime.wom_x_count || 0)} Y=${Number(runtime.wom_y_count || 0)} Z=${Number(runtime.wom_z_count || 0)}; last_active_ms=${Number(runtime.last_active_ms || 0)}</div>
+        <div><b>Live Read:</b> ${imuEscapeHtml(accelText)}</div>
+        <div style="color:var(--gray-600); margin-top:0.5rem;">INT_STATUS2 is shown from the cached firmware value so this read does not clear a pending IMU interrupt.</div>
+    `;
+}
+
+async function readImuState() {
+    const outputRow = document.getElementById("imu_state_output_row");
+    const output = document.getElementById("imu_state_output");
+    const button = document.getElementById("read_imu_state_button");
+
+    if (outputRow) outputRow.style.display = "";
+    if (output) output.textContent = "Reading IMU state...";
+    if (button) button.disabled = true;
+
+    try {
+        const response = await fetch('/api/imu_state', { cache: 'no-store' });
+        const data = await response.json();
+        if (!response.ok || data.ok === false) {
+            throw new Error(data.error || `HTTP ${response.status}`);
+        }
+        if (output) output.innerHTML = renderImuState(data);
+    } catch (error) {
+        if (output) output.textContent = "Unable to read IMU state: " + error.message;
+        showNotification("Unable to read IMU state: " + error.message, "red");
+    } finally {
+        if (button) button.disabled = false;
+    }
+}
+
 document.getElementById("defaultOpen").click();
 function checkStatus() {
     const xhttp = new XMLHttpRequest();

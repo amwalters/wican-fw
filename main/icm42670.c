@@ -663,6 +663,22 @@ esp_err_t icm42670_read_int_status2(icm42670_t *dev, uint8_t *status)
     return ESP_OK;
 }
 
+esp_err_t icm42670_read_register(icm42670_t *dev, uint8_t reg, uint8_t *value)
+{
+    CHECK_ARG(dev && value);
+
+    I2C_DEV_TAKE_MUTEX(&dev->i2c_dev);
+    I2C_DEV_CHECK(&dev->i2c_dev, read_register(dev, reg, value));
+    I2C_DEV_GIVE_MUTEX(&dev->i2c_dev);
+
+    return ESP_OK;
+}
+
+esp_err_t icm42670_read_mreg_register(icm42670_t *dev, icm42670_mreg_number_t mreg_num, uint8_t reg, uint8_t *value)
+{
+    return read_mreg_register(dev, mreg_num, reg, value);
+}
+
 esp_err_t icm42670_config_wom(icm42670_t *dev, icm42670_wom_config_t config)
 {
     CHECK_ARG(dev);

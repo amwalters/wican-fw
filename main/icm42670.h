@@ -571,6 +571,27 @@ esp_err_t icm42670_set_int_sources(icm42670_t *dev, uint8_t int_pin, icm42670_in
 esp_err_t icm42670_read_int_status2(icm42670_t *dev, uint8_t *status);
 
 /**
+ * @brief Read a user-bank register.
+ *
+ * @param dev Device descriptor
+ * @param reg Register address
+ * @param value Output register value
+ * @return `ESP_OK` on success
+ */
+esp_err_t icm42670_read_register(icm42670_t *dev, uint8_t reg, uint8_t *value);
+
+/**
+ * @brief Read an MREG register.
+ *
+ * @param dev Device descriptor
+ * @param mreg_num MREG bank
+ * @param reg Register address within the MREG bank
+ * @param value Output register value
+ * @return `ESP_OK` on success
+ */
+esp_err_t icm42670_read_mreg_register(icm42670_t *dev, icm42670_mreg_number_t mreg_num, uint8_t reg, uint8_t *value);
+
+/**
  * @brief Configures the Wake on Motion (WoM) behaviour
  *        WoM can only be configured if WoM is not enabled
  *

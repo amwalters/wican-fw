@@ -25,10 +25,37 @@ typedef struct {
     icm42670_wom_mode_t wom_ref_mode;
 } imu_wom_settings_t;
 
+typedef struct {
+    uint8_t who_am_i;
+    uint8_t mclk_rdy;
+    uint8_t pwr_mgmt0;
+    uint8_t int_config;
+    uint8_t int_source1;
+    uint8_t wom_config;
+    uint8_t accel_config0;
+    uint8_t accel_config1;
+    uint8_t apex_config1;
+    uint8_t int_status2_cached;
+    uint8_t accel_wom_x_thr;
+    uint8_t accel_wom_y_thr;
+    uint8_t accel_wom_z_thr;
+    uint32_t wom_x_count;
+    uint32_t wom_y_count;
+    uint32_t wom_z_count;
+    uint32_t last_active_ms;
+    activity_state_t activity_state;
+    imu_wom_settings_t configured_settings;
+    bool accel_valid;
+    float accel_x;
+    float accel_y;
+    float accel_z;
+} imu_register_state_t;
+
 void imu_default_wom_settings(imu_wom_settings_t *settings);
 esp_err_t imu_init(i2c_port_t i2c_num, gpio_num_t sda_gpio, gpio_num_t scl_gpio, gpio_num_t int_gpio, const imu_wom_settings_t *settings);
 esp_err_t imu_config_wom(const imu_wom_settings_t *settings);
 esp_err_t imu_enable_wom(bool enable);
+esp_err_t imu_read_register_state(imu_register_state_t *state);
 esp_err_t imu_read_accel(float *ax, float *ay, float *az);
 esp_err_t imu_read_gyro(float *gx, float *gy, float *gz);
 esp_err_t imu_read_temp(float *temp);
