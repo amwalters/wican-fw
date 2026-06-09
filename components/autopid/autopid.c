@@ -2246,6 +2246,10 @@ char *autopid_get_config(void)
 
             cJSON_AddStringToObject(root, "supply_mode_enabled",
                                     autopid_config->supply_mode_enabled ? "enable" : "disable");
+            cJSON_AddStringToObject(root, "voltage_rise_wakeup",
+                                    autopid_config->voltage_rise_wakeup_enabled ? "enable" : "disable");
+            cJSON_AddNumberToObject(root, "voltage_rise_threshold", autopid_config->voltage_rise_threshold);
+            cJSON_AddNumberToObject(root, "voltage_rise_time_seconds", autopid_config->voltage_rise_time_seconds);
             if (autopid_config->supply_mode_pid_name && autopid_config->supply_mode_pid_name[0] != '\0')
             {
                 cJSON_AddStringToObject(root, "supply_mode_pid_name", autopid_config->supply_mode_pid_name);

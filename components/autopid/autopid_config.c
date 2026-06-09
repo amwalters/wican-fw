@@ -448,6 +448,9 @@ static void parse_auto_pid_json(autopid_config_t *autopid_config, int *pid_index
     cJSON *ha_discovery_item = cJSON_GetObjectItem(root, "ha_discovery");
     cJSON *disable_on_sleep_voltage_item = cJSON_GetObjectItem(root, "disable_on_sleep_voltage");
     cJSON *pid_polling_min_voltage_item = cJSON_GetObjectItem(root, "pid_polling_min_voltage");
+    cJSON *voltage_rise_wakeup_item = cJSON_GetObjectItem(root, "voltage_rise_wakeup");
+    cJSON *voltage_rise_threshold_item = cJSON_GetObjectItem(root, "voltage_rise_threshold");
+    cJSON *voltage_rise_time_seconds_item = cJSON_GetObjectItem(root, "voltage_rise_time_seconds");
     cJSON *supply_mode_enabled_item = cJSON_GetObjectItem(root, "supply_mode_enabled");
     cJSON *supply_mode_pid_name_item = cJSON_GetObjectItem(root, "supply_mode_pid_name");
     cJSON *supply_mode_operator_item = cJSON_GetObjectItem(root, "supply_mode_operator");
@@ -522,6 +525,57 @@ static void parse_auto_pid_json(autopid_config_t *autopid_config, int *pid_index
         if (v >= 9.0f && v <= 18.0f)
         {
             autopid_config->pid_polling_min_voltage = v;
+        }
+    }
+
+    autopid_config->voltage_rise_wakeup_enabled = true;
+    if (voltage_rise_wakeup_item)
+    {
+        if (cJSON_IsString(voltage_rise_wakeup_item) && voltage_rise_wakeup_item->valuestring)
+        {
+            autopid_config->voltage_rise_wakeup_enabled = (strcmp(voltage_rise_wakeup_item->valuestring, "disable") != 0);
+        }
+        else if (cJSON_IsBool(voltage_rise_wakeup_item))
+        {
+            autopid_config->voltage_rise_wakeup_enabled = cJSON_IsTrue(voltage_rise_wakeup_item);
+        }
+    }
+
+    autopid_config->voltage_rise_threshold = 0.2f;
+    if (voltage_rise_threshold_item)
+    {
+        float v = autopid_config->voltage_rise_threshold;
+        if (cJSON_IsNumber(voltage_rise_threshold_item))
+        {
+            v = (float)voltage_rise_threshold_item->valuedouble;
+        }
+        else if (cJSON_IsString(voltage_rise_threshold_item) && voltage_rise_threshold_item->valuestring)
+        {
+            v = (float)atof(voltage_rise_threshold_item->valuestring);
+        }
+
+        if (v >= 0.1f && v <= 5.0f)
+        {
+            autopid_config->voltage_rise_threshold = v;
+        }
+    }
+
+    autopid_config->voltage_rise_time_seconds = 20;
+    if (voltage_rise_time_seconds_item)
+    {
+        uint32_t seconds = autopid_config->voltage_rise_time_seconds;
+        if (cJSON_IsNumber(voltage_rise_time_seconds_item))
+        {
+            seconds = (uint32_t)voltage_rise_time_seconds_item->valuedouble;
+        }
+        else if (cJSON_IsString(voltage_rise_time_seconds_item) && voltage_rise_time_seconds_item->valuestring)
+        {
+            seconds = (uint32_t)atoi(voltage_rise_time_seconds_item->valuestring);
+        }
+
+        if (seconds >= 1 && seconds <= 3600)
+        {
+            autopid_config->voltage_rise_time_seconds = seconds;
         }
     }
 

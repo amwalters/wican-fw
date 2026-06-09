@@ -244,6 +244,13 @@ typedef struct
     // Stored in auto_pid.json as: pid_polling_min_voltage = <number>.
     float pid_polling_min_voltage;
 
+    // When enabled, a detected battery-voltage rise temporarily bypasses PID polling pause.
+    // Stored in auto_pid.json as: voltage_rise_wakeup = "enable"/"disable",
+    // voltage_rise_threshold = <number>, voltage_rise_time_seconds = <number>.
+    bool voltage_rise_wakeup_enabled;
+    float voltage_rise_threshold;
+    uint32_t voltage_rise_time_seconds;
+
     // Optional PID/value comparison that indicates external 12V supply mode and bypasses PID polling pause.
     // Stored in auto_pid.json as: supply_mode_enabled, supply_mode_pid_name, supply_mode_operator, supply_mode_value.
     bool supply_mode_enabled;

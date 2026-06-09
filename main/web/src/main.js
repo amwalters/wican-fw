@@ -2299,6 +2299,16 @@ function loadAutoTable(jsonData) {
                 : '';
         }
         toggleSupplyModeSection();
+        setElementValue("voltage_rise_wakeup",
+            (data.voltage_rise_wakeup === undefined || data.voltage_rise_wakeup === null || data.voltage_rise_wakeup === 'enable' || data.voltage_rise_wakeup === true) ? 'enable' : 'disable',
+            'enable');
+        setElementValue("voltage_rise_threshold",
+            (data.voltage_rise_threshold !== undefined && data.voltage_rise_threshold !== null) ? data.voltage_rise_threshold : '0.2',
+            '0.2');
+        setElementValue("voltage_rise_time_seconds",
+            (data.voltage_rise_time_seconds !== undefined && data.voltage_rise_time_seconds !== null) ? data.voltage_rise_time_seconds : '20',
+            '20');
+        toggleVoltageRiseSection();
         setElementValue("imu_voltage_override",
             (data.imu_voltage_override === 'enable' || data.imu_voltage_override === true) ? 'enable' : 'disable',
             'disable');
@@ -2585,6 +2595,41 @@ function toggleSupplyModeSection() {
     });
 }
 
+function updateVoltageRiseSuffixes() {
+    const thresholdInput = document.getElementById("voltage_rise_threshold");
+    const thresholdSuffix = document.getElementById("voltage_rise_threshold_suffix");
+    const timeInput = document.getElementById("voltage_rise_time_seconds");
+    const timeSuffix = document.getElementById("voltage_rise_time_seconds_suffix");
+
+    if (thresholdSuffix) {
+        thresholdSuffix.style.display = thresholdInput && String(thresholdInput.value).trim() !== '' ? 'block' : 'none';
+    }
+    if (timeSuffix) {
+        timeSuffix.style.display = timeInput && String(timeInput.value).trim() !== '' ? 'block' : 'none';
+    }
+}
+
+function toggleVoltageRiseSection() {
+    const enabled = document.getElementById("voltage_rise_wakeup")?.value === 'enable';
+    const settingsRow = document.getElementById("voltage_rise_settings_row");
+    const controls = [
+        document.getElementById("voltage_rise_threshold"),
+        document.getElementById("voltage_rise_time_seconds")
+    ];
+
+    if (settingsRow) {
+        settingsRow.style.display = enabled ? '' : 'none';
+    }
+
+    controls.forEach((control) => {
+        if (!control) return;
+        control.disabled = !enabled;
+        control.required = enabled;
+    });
+
+    updateVoltageRiseSuffixes();
+}
+
 
 async function storeAutoTableData() {
     try {
@@ -2623,6 +2668,31 @@ async function storeAutoTableData() {
                 throw new Error("12V supply trigger value must be a number");
             }
             supplyModeCompareValue = n;
+        }
+        const voltageRiseWakeupValue = document.getElementById("voltage_rise_wakeup")?.value || 'enable';
+        const voltageRiseEnabled = voltageRiseWakeupValue === 'enable';
+        const voltageRiseThresholdRaw = document.getElementById("voltage_rise_threshold")?.value;
+        const voltageRiseTimeSecondsRaw = document.getElementById("voltage_rise_time_seconds")?.value;
+        let voltageRiseThresholdValue = null;
+        let voltageRiseTimeSecondsValue = null;
+        if (voltageRiseEnabled) {
+            if (voltageRiseThresholdRaw === undefined || String(voltageRiseThresholdRaw).trim() === '') {
+                throw new Error("Voltage rise threshold is required when Wake on Voltage Rise is enabled");
+            }
+            const threshold = parseFloat(voltageRiseThresholdRaw);
+            if (!Number.isFinite(threshold) || threshold < 0.1 || threshold > 5.0) {
+                throw new Error("Voltage rise threshold must be between 0.1V and 5.0V");
+            }
+            voltageRiseThresholdValue = threshold;
+
+            if (voltageRiseTimeSecondsRaw === undefined || String(voltageRiseTimeSecondsRaw).trim() === '') {
+                throw new Error("Voltage rise time is required when Wake on Voltage Rise is enabled");
+            }
+            const riseTimeSeconds = parseInt(voltageRiseTimeSecondsRaw, 10);
+            if (!Number.isFinite(riseTimeSeconds) || riseTimeSeconds < 1 || riseTimeSeconds > 3600) {
+                throw new Error("Voltage rise time must be between 1 and 3600 seconds");
+            }
+            voltageRiseTimeSecondsValue = riseTimeSeconds;
         }
         const imuVoltageOverrideValue = document.getElementById("imu_voltage_override")?.value || 'disable';
         const disableWifiBleOnPidPauseValue = document.getElementById("disable_wifi_ble_on_pid_pause")?.value || 'disable';
@@ -2917,6 +2987,9 @@ async function storeAutoTableData() {
             supply_mode_pid_name: supplyModePidNameValue,
             supply_mode_operator: supplyModeOperatorValue,
             supply_mode_value: supplyModeCompareValue,
+            voltage_rise_wakeup: voltageRiseWakeupValue,
+            voltage_rise_threshold: voltageRiseThresholdValue,
+            voltage_rise_time_seconds: voltageRiseTimeSecondsValue,
             imu_voltage_override: imuVoltageOverrideValue,
             disable_wifi_ble_on_pid_pause: disableWifiBleOnPidPauseValue,
             pid_polling_min_voltage: pidPollingMinVoltageValue,
@@ -5401,6 +5474,7 @@ async function Load() {
 
     // Initialize Automate low-voltage defaults before auto_pid.json is loaded.
     try { togglePidPollingMinVoltageRow(); } catch(_) {}
+    try { toggleVoltageRiseSection(); } catch(_) {}
 
     // Initialize AP SSID input state
     try { toggleApSsid(); } catch(_) {}

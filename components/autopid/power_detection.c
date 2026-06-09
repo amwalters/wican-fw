@@ -60,11 +60,7 @@
 #define POWER_DETECTION_LOAD_TEST_LABEL_LEN 16
 #define POWER_DETECTION_LOAD_TEST_ADC_SAMPLES 20
 #define POWER_DETECTION_VOLTAGE_RISE_DELTA_V 0.20f
-#define POWER_DETECTION_VOLTAGE_RISE_SAMPLE_INTERVAL_MS (2 * 1000)
-#define POWER_DETECTION_VOLTAGE_RISE_CURRENT_MIN_AGE_MS 0
-#define POWER_DETECTION_VOLTAGE_RISE_CURRENT_MAX_AGE_MS (10 * 1000)
-#define POWER_DETECTION_VOLTAGE_RISE_BASELINE_MIN_AGE_MS (20 * 1000)
-#define POWER_DETECTION_VOLTAGE_RISE_BASELINE_MAX_AGE_MS (30 * 1000)
+#define POWER_DETECTION_VOLTAGE_RISE_DEFAULT_TIME_SECONDS 20
 #define POWER_DETECTION_VOLTAGE_RISE_HOLD_MS (60 * 1000)
 #define POWER_DETECTION_VOLTAGE_RISE_MIN_SAMPLES 3
 #define POWER_DETECTION_VOLTAGE_HISTORY_SIZE 32
@@ -392,7 +388,21 @@ static bool is_12v_supply_mode(const autopid_config_t *config)
     return running;
 }
 
-static void voltage_history_record(float voltage, int64_t now_ms)
+static uint32_t voltage_rise_time_seconds_or_default(uint32_t rise_time_seconds)
+{
+    return rise_time_seconds > 0
+        ? rise_time_seconds
+        : POWER_DETECTION_VOLTAGE_RISE_DEFAULT_TIME_SECONDS;
+}
+
+static int64_t voltage_rise_sample_interval_ms(uint32_t rise_time_seconds)
+{
+    uint32_t seconds = voltage_rise_time_seconds_or_default(rise_time_seconds);
+    int64_t interval_ms = ((int64_t)seconds * 1000LL) / 10LL;
+    return interval_ms > 0 ? interval_ms : 1;
+}
+
+static void voltage_history_record(float voltage, int64_t now_ms, int64_t sample_interval_ms)
 {
     if (isnan(voltage))
     {
@@ -400,7 +410,7 @@ static void voltage_history_record(float voltage, int64_t now_ms)
     }
 
     if (voltage_history_count > 0 &&
-        (now_ms - voltage_history_last_sample_ms) < POWER_DETECTION_VOLTAGE_RISE_SAMPLE_INTERVAL_MS)
+        (now_ms - voltage_history_last_sample_ms) < sample_interval_ms)
     {
         return;
     }
@@ -470,26 +480,30 @@ static bool voltage_history_window_median(int64_t now_ms, int64_t min_age_ms, in
     return true;
 }
 
-static bool voltage_rising_bypass_active(int64_t now_ms)
+static bool voltage_rising_bypass_active(int64_t now_ms, float threshold_v, uint32_t rise_time_seconds)
 {
     if (voltage_rising_hold_timer != 0 && !wc_timer_is_expired(&voltage_rising_hold_timer))
     {
         return true;
     }
 
+    uint32_t seconds = voltage_rise_time_seconds_or_default(rise_time_seconds);
+    int64_t current_max_age_ms = ((int64_t)seconds * 1000LL) / 2LL;
+    int64_t baseline_min_age_ms = (int64_t)seconds * 1000LL;
+    int64_t baseline_max_age_ms = ((int64_t)seconds * 3LL * 1000LL) / 2LL;
     float current_median = NAN;
     float baseline_median = NAN;
     uint8_t current_samples = 0;
     uint8_t baseline_samples = 0;
 
     bool have_current = voltage_history_window_median(now_ms,
-                                                      POWER_DETECTION_VOLTAGE_RISE_CURRENT_MIN_AGE_MS,
-                                                      POWER_DETECTION_VOLTAGE_RISE_CURRENT_MAX_AGE_MS,
+                                                      0,
+                                                      current_max_age_ms,
                                                       &current_median,
                                                       &current_samples);
     bool have_baseline = voltage_history_window_median(now_ms,
-                                                       POWER_DETECTION_VOLTAGE_RISE_BASELINE_MIN_AGE_MS,
-                                                       POWER_DETECTION_VOLTAGE_RISE_BASELINE_MAX_AGE_MS,
+                                                       baseline_min_age_ms,
+                                                       baseline_max_age_ms,
                                                        &baseline_median,
                                                        &baseline_samples);
 
@@ -499,16 +513,20 @@ static bool voltage_rising_bypass_active(int64_t now_ms)
     }
 
     float delta = current_median - baseline_median;
-    if (delta > POWER_DETECTION_VOLTAGE_RISE_DELTA_V)
+    if (delta > threshold_v)
     {
-        wc_timer_set(&voltage_rising_hold_timer, POWER_DETECTION_VOLTAGE_RISE_HOLD_MS);
+        uint64_t hold_ms = POWER_DETECTION_VOLTAGE_RISE_HOLD_MS;
+        wc_timer_set(&voltage_rising_hold_timer, hold_ms);
         ESP_LOGI(TAG,
-                 "Voltage rising bypass: current %.2fV (%u samples) baseline %.2fV (%u samples), delta %.2fV",
+                 "Voltage rising bypass: current %.2fV (%u samples) baseline %.2fV (%u samples), delta %.2fV threshold %.2fV over %lus hold %lus",
                  current_median,
                  (unsigned int)current_samples,
                  baseline_median,
                  (unsigned int)baseline_samples,
-                 delta);
+                 delta,
+                 threshold_v,
+                 (unsigned long)seconds,
+                 (unsigned long)(hold_ms / 1000ULL));
         return true;
     }
 
@@ -569,12 +587,21 @@ static bool evaluate_pid_polling_pause(const autopid_config_t *config, float *ou
         if (out_voltage)
             *out_voltage = v;
 
-        voltage_history_record(v, now_ms);
-        if (voltage_rising_bypass_active(now_ms))
+        voltage_history_record(v, now_ms, voltage_rise_sample_interval_ms(config->voltage_rise_time_seconds));
+        if (config->voltage_rise_wakeup_enabled &&
+            voltage_rising_bypass_active(now_ms,
+                                         config->voltage_rise_threshold > 0.0f
+                                             ? config->voltage_rise_threshold
+                                             : POWER_DETECTION_VOLTAGE_RISE_DELTA_V,
+                                         config->voltage_rise_time_seconds))
         {
             if (out_reason)
                 *out_reason = "voltage_rise";
             return false;
+        }
+        else if (!config->voltage_rise_wakeup_enabled)
+        {
+            voltage_rising_hold_timer = 0;
         }
     }
 
