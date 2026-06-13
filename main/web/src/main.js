@@ -4444,11 +4444,11 @@ async function postConfig() {
     obj["imu_wom_y"] = document.getElementById("imu_wom_y")?.checked ? "enable" : "disable";
     obj["imu_wom_z"] = document.getElementById("imu_wom_z")?.checked ? "enable" : "disable";
     obj["imu_smd"] = document.getElementById("imu_smd")?.checked ? "enable" : "disable";
-    obj["imu_accel_odr"] = document.getElementById("imu_accel_odr")?.value || "ICM42670_ACCEL_ODR_50HZ";
+    obj["imu_accel_odr"] = document.getElementById("imu_accel_odr")?.value || "ICM42670_ACCEL_ODR_1_5625HZ";
     obj["imu_accel_avg"] = document.getElementById("imu_accel_avg")?.value || "ICM42670_ACCEL_AVG_32X";
     obj["imu_wom_int_dur"] = document.getElementById("imu_wom_int_dur")?.value || "ICM42670_WOM_INT_DUR_FOURTH";
     obj["imu_wom_int_mode"] = document.getElementById("imu_wom_int_mode")?.value || "ICM42670_WOM_INT_MODE_ALL_OR";
-    obj["imu_wom_ref_mode"] = document.getElementById("imu_wom_ref_mode")?.value || "ICM42670_WOM_MODE_REF_INITIAL";
+    obj["imu_wom_ref_mode"] = document.getElementById("imu_wom_ref_mode")?.value || "ICM42670_WOM_MODE_REF_LAST";
     obj["elm327_udp_log"] = document.getElementById("elm327_udp_log").value;
 
 
@@ -5212,11 +5212,11 @@ async function Load() {
         const imuWomIntDur = document.getElementById("imu_wom_int_dur");
         const imuWomIntMode = document.getElementById("imu_wom_int_mode");
         const imuWomRefMode = document.getElementById("imu_wom_ref_mode");
-        if (imuAccelOdr) imuAccelOdr.value = obj.imu_accel_odr || "ICM42670_ACCEL_ODR_50HZ";
+        if (imuAccelOdr) imuAccelOdr.value = obj.imu_accel_odr || "ICM42670_ACCEL_ODR_1_5625HZ";
         if (imuAccelAvg) imuAccelAvg.value = obj.imu_accel_avg || "ICM42670_ACCEL_AVG_32X";
         if (imuWomIntDur) imuWomIntDur.value = obj.imu_wom_int_dur || "ICM42670_WOM_INT_DUR_FOURTH";
         if (imuWomIntMode) imuWomIntMode.value = obj.imu_wom_int_mode || "ICM42670_WOM_INT_MODE_ALL_OR";
-        if (imuWomRefMode) imuWomRefMode.value = obj.imu_wom_ref_mode || "ICM42670_WOM_MODE_REF_INITIAL";
+        if (imuWomRefMode) imuWomRefMode.value = obj.imu_wom_ref_mode || "ICM42670_WOM_MODE_REF_LAST";
 
         // Load ELM327 UDP log toggle (default disabled)
         const elmUdp = document.getElementById("elm327_udp_log");

@@ -63,11 +63,11 @@ void imu_default_wom_settings(imu_wom_settings_t *settings)
     settings->wom_y_enabled = true;
     settings->wom_z_enabled = false;
     settings->smd_enabled = false;
-    settings->accel_odr = ICM42670_ACCEL_ODR_50HZ;
+    settings->accel_odr = ICM42670_ACCEL_ODR_1_5625HZ;
     settings->accel_avg = ICM42670_ACCEL_AVG_32X;
     settings->wom_int_dur = ICM42670_WOM_INT_DUR_FOURTH;
     settings->wom_int_mode = ICM42670_WOM_INT_MODE_ALL_OR;
-    settings->wom_ref_mode = ICM42670_WOM_MODE_REF_INITIAL;
+    settings->wom_ref_mode = ICM42670_WOM_MODE_REF_LAST;
 }
 
 void IRAM_ATTR imu_isr_handler(void* arg)
