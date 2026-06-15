@@ -864,7 +864,7 @@ static void autopid_data_update(autopid_config_t *pids)
                         parameter_t *param = &curr_pid->parameters[j];
                         if (!param->enabled) continue;
 
-                        // ---> SKIP NON-DEFAULT DESTINATIONS <---
+                        // ---> SKIP NON-DEFAULT DESTINATIONS unless 12v supply PID<---
                         if (param->destination_type != DEST_DEFAULT &&
                             !(pids->supply_mode_enabled &&
                               pids->supply_mode_pid_name &&
@@ -895,7 +895,7 @@ static void autopid_data_update(autopid_config_t *pids)
                     parameter_t *param = &f->parameters[pi];
                     if (!param->enabled) continue;
 
-                    // ---> SKIP NON-DEFAULT DESTINATIONS <---
+                    // ---> SKIP NON-DEFAULT DESTINATIONS unless 12v supply PID<---
                     if (param->destination_type != DEST_DEFAULT &&
                         !(pids->supply_mode_enabled &&
                           pids->supply_mode_pid_name &&
