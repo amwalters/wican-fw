@@ -315,36 +315,6 @@ static void load_test_task(void *arg)
     vTaskDelete(NULL);
 }
 
-static bool supply_mode_compare_value(double actual, const char *op, double expected)
-{
-    if (strcmp(op, "=") == 0 || strcmp(op, "==") == 0)
-    {
-        return fabs(actual - expected) < 0.00001;
-    }
-    if (strcmp(op, "<") == 0)
-    {
-        return actual < expected;
-    }
-    if (strcmp(op, ">") == 0)
-    {
-        return actual > expected;
-    }
-    if (strcmp(op, ">=") == 0)
-    {
-        return actual >= expected;
-    }
-    if (strcmp(op, "<=") == 0)
-    {
-        return actual <= expected;
-    }
-    if (strcmp(op, "!=") == 0)
-    {
-        return fabs(actual - expected) >= 0.00001;
-    }
-
-    return false;
-}
-
 static bool is_12v_supply_mode(const autopid_config_t *config)
 {
     if (!config ||
@@ -356,36 +326,7 @@ static bool is_12v_supply_mode(const autopid_config_t *config)
         return false;
     }
 
-    const char *pid_name = config->supply_mode_pid_name;
-    const char *op = config->supply_mode_operator;
-    double compare_value = config->supply_mode_value;
-
-    char *ready_json = autopid_get_value_by_name((char *)pid_name);
-    bool running = false;
-
-    if (ready_json)
-    {
-        cJSON *root = cJSON_Parse(ready_json);
-        if (root)
-        {
-            cJSON *child = root->child;
-            while (child)
-            {
-                if (cJSON_IsNumber(child))
-                {
-                    if (supply_mode_compare_value(child->valuedouble, op, compare_value))
-                    {
-                        running = true;
-                    }
-                }
-                child = child->next;
-            }
-            cJSON_Delete(root);
-        }
-        free(ready_json);
-    }
-
-    return running;
+    return autopid_supply_mode_is_active();
 }
 
 static uint32_t voltage_rise_time_seconds_or_default(uint32_t rise_time_seconds)

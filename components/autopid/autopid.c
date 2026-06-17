@@ -94,6 +94,7 @@ static StaticEventGroup_t xautopid_event_group_buffer;
 static autopid_config_t *autopid_config = NULL;
 static autopid_data_t autopid_data = {.json_str = NULL, .mutex = NULL};
 static QueueHandle_t protocolnumberQueue = NULL;
+static volatile bool supply_mode_active = false;
 // Cached configuration JSON (built once after autopid_config is loaded)
 static char *autopid_config_json = NULL;
 static StaticTimer_t autopid_bit_set_timer_buffer;
@@ -308,6 +309,61 @@ static bool autopid_prepare_parameter_value(parameter_t *param,
 
     *out_value = (float)rounded_value;
     return true;
+}
+
+static bool autopid_supply_mode_compare_value(double actual, const char *op, double expected)
+{
+    if (!op)
+        return false;
+
+    if (strcmp(op, "=") == 0 || strcmp(op, "==") == 0)
+        return fabs(actual - expected) < 0.00001;
+    if (strcmp(op, "<") == 0)
+        return actual < expected;
+    if (strcmp(op, ">") == 0)
+        return actual > expected;
+    if (strcmp(op, ">=") == 0)
+        return actual >= expected;
+    if (strcmp(op, "<=") == 0)
+        return actual <= expected;
+    if (strcmp(op, "!=") == 0)
+        return fabs(actual - expected) >= 0.00001;
+
+    return false;
+}
+
+static void autopid_update_supply_mode_state_from_param(const parameter_t *param)
+{
+    if (!param ||
+        !param->name ||
+        !autopid_config ||
+        !autopid_config->supply_mode_enabled ||
+        !autopid_config->supply_mode_pid_name ||
+        autopid_config->supply_mode_pid_name[0] == '\0' ||
+        autopid_config->supply_mode_operator[0] == '\0' ||
+        strcmp(param->name, autopid_config->supply_mode_pid_name) != 0 ||
+        !isfinite((double)param->value))
+    {
+        return;
+    }
+
+    supply_mode_active = autopid_supply_mode_compare_value((double)param->value,
+                                                           autopid_config->supply_mode_operator,
+                                                           (double)autopid_config->supply_mode_value);
+}
+
+bool autopid_supply_mode_is_active(void)
+{
+    if (!autopid_config ||
+        !autopid_config->supply_mode_enabled ||
+        !autopid_config->supply_mode_pid_name ||
+        autopid_config->supply_mode_pid_name[0] == '\0' ||
+        autopid_config->supply_mode_operator[0] == '\0')
+    {
+        return false;
+    }
+
+    return supply_mode_active;
 }
 // strdup_psram
 static char *strdup_psram(const char *s)
@@ -2510,6 +2566,7 @@ static void process_can_filter_frame(can_filter_t *f, const response_t *rsp)
                 param->failed = false;
                 ESP_LOGI(TAG, "CANFLT 0x%lX param=%s result=%.2f", (unsigned long)f->frame_id,
                          param->name ? param->name : "(null)", (double)param->value);
+                autopid_update_supply_mode_state_from_param(param);
                 publish_parameter_mqtt(param);
             }
         }
@@ -3433,6 +3490,7 @@ static void execute_pid(pid_data_t *curr_pid, bool check_timers) {
                                 else if (param->max != FLT_MAX && result > param->max) { } 
                                 else {
                                     param->value = (float)(round(result * 100.0) / 100.0);
+                                    autopid_update_supply_mode_state_from_param(param);
                                     publish_parameter_mqtt(param);
                                 }
                             } else { param->failed = true; }
@@ -3453,6 +3511,7 @@ static void execute_pid(pid_data_t *curr_pid, bool check_timers) {
                                    }
                                     if (err == ESP_OK) {
                                         param->value = roundf(param->value * 100.0) / 100.0;
+                                        autopid_update_supply_mode_state_from_param(param);
                                         publish_parameter_mqtt(param);
                                     }
                                     break;
