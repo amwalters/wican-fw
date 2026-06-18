@@ -89,6 +89,13 @@ typedef struct
     load_test_window_result_t windows[POWER_DETECTION_LOAD_TEST_MAX_WINDOW_COUNT];
 } load_test_status_t;
 
+typedef enum
+{
+    SUPPLY_TRIGGER_NONE = 0,
+    SUPPLY_TRIGGER_IMU,
+    SUPPLY_TRIGGER_VOLTAGE_RISE,
+} supply_trigger_t;
+
 static bool motion_was_active = false;
 static wc_timer_t imu_stationary_hold_timer = 0;
 static volatile bool load_test_active = false;
@@ -105,6 +112,7 @@ static uint8_t voltage_history_next = 0;
 static uint8_t voltage_history_count = 0;
 static int64_t voltage_history_last_sample_ms = 0;
 static wc_timer_t voltage_rising_hold_timer = 0;
+static supply_trigger_t supply_trigger = SUPPLY_TRIGGER_NONE;
 static power_detection_pid_polling_state_t pid_polling_state = {
     .paused = false,
     .reason = NULL,
@@ -497,10 +505,41 @@ static bool evaluate_pid_polling_pause(const autopid_config_t *config, float *ou
 
     if (is_12v_supply_mode(config))
     {
+        float v = NAN;
+        bool above_automate_threshold = false;
+
+        if (config->disable_pid_requests_on_automate_threshold &&
+            sleep_mode_get_voltage(&v) == ESP_OK)
+        {
+            if (out_voltage)
+                *out_voltage = v;
+
+            above_automate_threshold = (v >= config->pid_polling_min_voltage);
+        }
+
         if (out_reason)
-            *out_reason = "12v supply";
+        {
+            if (above_automate_threshold)
+            {
+                *out_reason = "12v supply: Over threshold trigger";
+            }
+            else if (supply_trigger == SUPPLY_TRIGGER_IMU)
+            {
+                *out_reason = "12v supply: Motion trigger";
+            }
+            else if (supply_trigger == SUPPLY_TRIGGER_VOLTAGE_RISE)
+            {
+                *out_reason = "12v supply: V rise trigger";
+            }
+            else
+            {
+                *out_reason = "12v supply";
+            }
+        }
         return false;
     }
+
+    supply_trigger = SUPPLY_TRIGGER_NONE;
 
     if (config->imu_voltage_override_enabled)
     {
@@ -508,6 +547,7 @@ static bool evaluate_pid_polling_pause(const autopid_config_t *config, float *ou
         if (imu_state == ACTIVITY_STATE_ACTIVE)
         {
             motion_was_active = true;
+            supply_trigger = SUPPLY_TRIGGER_IMU;
             if (out_reason)
                 *out_reason = "imu_active";
             return false;
@@ -538,6 +578,7 @@ static bool evaluate_pid_polling_pause(const autopid_config_t *config, float *ou
         {
             if (out_reason)
                 *out_reason = "voltage_rise";
+            supply_trigger = SUPPLY_TRIGGER_VOLTAGE_RISE;
             return false;
         }
         else if (!config->voltage_rise_wakeup_enabled)
