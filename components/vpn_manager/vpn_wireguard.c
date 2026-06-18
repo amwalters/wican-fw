@@ -25,6 +25,7 @@
 #include <esp_wireguard.h>
 #include "lwip/netdb.h"
 #include "lwip/inet.h"
+#include "lwip/dns.h"
 
 static const char *TAG_WG = "VPN_WG";
 
@@ -57,6 +58,11 @@ static bool resolve_ipv4_endpoint(const char *host, char *out_ip, size_t out_ip_
     hints.ai_socktype = SOCK_DGRAM;
 
     struct addrinfo *res = NULL;
+
+    // Network may have changed since the last lookup, e.g. home Wi-Fi -> hotspot.
+    // Avoid stale split-horizon DNS results such as resolving to a LAN IP off-LAN.
+    dns_clear_cache();
+
     int gai = getaddrinfo(host, NULL, &hints, &res);
     if (gai != 0 || res == NULL)
     {
