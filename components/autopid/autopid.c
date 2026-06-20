@@ -2302,6 +2302,8 @@ char *autopid_get_config(void)
 
             cJSON_AddStringToObject(root, "supply_mode_enabled",
                                     autopid_config->supply_mode_enabled ? "enable" : "disable");
+            cJSON_AddNumberToObject(root, "boot_pid_polling_keep_alive_seconds",
+                                    autopid_config->boot_pid_polling_keep_alive_seconds);
             cJSON_AddStringToObject(root, "voltage_rise_wakeup",
                                     autopid_config->voltage_rise_wakeup_enabled ? "enable" : "disable");
             cJSON_AddNumberToObject(root, "voltage_rise_threshold", autopid_config->voltage_rise_threshold);
@@ -4508,6 +4510,7 @@ static void autopid_task(void *pvParameters)
 
         if (autopid_config->disable_on_sleep_voltage &&
             !dev_status_is_wake_voltage_ok() &&
+            !power_detection_is_boot_pid_polling_keep_alive_active(autopid_config) &&
             !dev_status_is_autopid_wake_bypass_low_voltage()) {
             ESP_LOGI(TAG, "Voltage below sleep threshold, pausing autopid until voltage recovers");
             obd_logger_disable();

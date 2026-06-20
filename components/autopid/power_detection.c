@@ -92,6 +92,7 @@ typedef struct
 typedef enum
 {
     SUPPLY_TRIGGER_NONE = 0,
+    SUPPLY_TRIGGER_BOOT,
     SUPPLY_TRIGGER_IMU,
     SUPPLY_TRIGGER_VOLTAGE_RISE,
 } supply_trigger_t;
@@ -337,6 +338,18 @@ static bool is_12v_supply_mode(const autopid_config_t *config)
     return autopid_supply_mode_is_active();
 }
 
+bool power_detection_is_boot_pid_polling_keep_alive_active(const autopid_config_t *config)
+{
+    if (!config || config->boot_pid_polling_keep_alive_seconds == 0)
+    {
+        return false;
+    }
+
+    int64_t uptime_us = esp_timer_get_time();
+    int64_t keep_alive_us = (int64_t)config->boot_pid_polling_keep_alive_seconds * 1000000LL;
+    return uptime_us < keep_alive_us;
+}
+
 static uint32_t voltage_rise_time_seconds_or_default(uint32_t rise_time_seconds)
 {
     return rise_time_seconds > 0
@@ -496,6 +509,8 @@ static bool evaluate_pid_polling_pause(const autopid_config_t *config, float *ou
         return false;
     }
 
+    bool boot_keep_alive_active = power_detection_is_boot_pid_polling_keep_alive_active(config);
+
  //   if (dev_status_is_autopid_wake_bypass_low_voltage())
  //   {
  //       if (out_reason)
@@ -519,7 +534,11 @@ static bool evaluate_pid_polling_pause(const autopid_config_t *config, float *ou
 
         if (out_reason)
         {
-            if (above_automate_threshold)
+            if (supply_trigger == SUPPLY_TRIGGER_BOOT)
+            {
+                *out_reason = "12v supply: boot";
+            }
+            else if (above_automate_threshold)
             {
                 *out_reason = "12v supply: Over threshold trigger";
             }
@@ -540,6 +559,14 @@ static bool evaluate_pid_polling_pause(const autopid_config_t *config, float *ou
     }
 
     supply_trigger = SUPPLY_TRIGGER_NONE;
+
+    if (boot_keep_alive_active)
+    {
+        supply_trigger = SUPPLY_TRIGGER_BOOT;
+        if (out_reason)
+            *out_reason = "boot";
+        return false;
+    }
 
     if (config->imu_voltage_override_enabled)
     {

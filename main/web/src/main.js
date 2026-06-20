@@ -2287,6 +2287,11 @@ function loadAutoTable(jsonData) {
         setElementValue("grouping", data.grouping, 'disable');
         setElementValue("disable_on_sleep_voltage", data.disable_on_sleep_voltage, 'disable');
         setElementValue("pid_polling_min_voltage", data.pid_polling_min_voltage, '13.1');
+        setElementValue("boot_pid_polling_keep_alive_seconds",
+            (data.boot_pid_polling_keep_alive_seconds !== undefined && data.boot_pid_polling_keep_alive_seconds !== null)
+                ? data.boot_pid_polling_keep_alive_seconds
+                : '30',
+            '30');
         const supplyModeSelectedPid = (data.supply_mode_enabled === 'enable' || data.supply_mode_enabled === true)
             ? (data.supply_mode_pid_name || '')
             : '';
@@ -2696,6 +2701,11 @@ async function storeAutoTableData() {
         }
         const imuVoltageOverrideValue = document.getElementById("imu_voltage_override")?.value || 'disable';
         const disableWifiBleOnPidPauseValue = document.getElementById("disable_wifi_ble_on_pid_pause")?.value || 'disable';
+        const bootPidPollingKeepAliveSecondsRaw = document.getElementById("boot_pid_polling_keep_alive_seconds")?.value;
+        const bootPidPollingKeepAliveSeconds = parseInt(bootPidPollingKeepAliveSecondsRaw, 10);
+        if (!Number.isFinite(bootPidPollingKeepAliveSeconds) || bootPidPollingKeepAliveSeconds < 0) {
+            throw new Error("Bootup keep-alive seconds must be 0 or greater");
+        }
         const pidPollingMinVoltageValueRaw = document.getElementById("pid_polling_min_voltage")?.value;
         const pidPollingMinVoltageValue = (() => {
             const n = parseFloat(pidPollingMinVoltageValueRaw);
@@ -2992,6 +3002,7 @@ async function storeAutoTableData() {
             voltage_rise_time_seconds: voltageRiseTimeSecondsValue,
             imu_voltage_override: imuVoltageOverrideValue,
             disable_wifi_ble_on_pid_pause: disableWifiBleOnPidPauseValue,
+            boot_pid_polling_keep_alive_seconds: bootPidPollingKeepAliveSeconds,
             pid_polling_min_voltage: pidPollingMinVoltageValue,
             webhook_data_mode: webhook_data_mode,
             car_specific: carSpecificValue,

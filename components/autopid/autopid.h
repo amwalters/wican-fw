@@ -244,6 +244,11 @@ typedef struct
     // Stored in auto_pid.json as: pid_polling_min_voltage = <number>.
     float pid_polling_min_voltage;
 
+    // Startup grace window: allow PID polling while uptime is below this many seconds.
+    // Stored in auto_pid.json as: boot_pid_polling_keep_alive_seconds = <number>.
+    // 0 disables the boot keep-alive.
+    uint32_t boot_pid_polling_keep_alive_seconds;
+
     // When enabled, a detected battery-voltage rise temporarily bypasses PID polling pause.
     // Stored in auto_pid.json as: voltage_rise_wakeup = "enable"/"disable",
     // voltage_rise_threshold = <number>, voltage_rise_time_seconds = <number>.

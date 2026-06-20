@@ -1509,6 +1509,19 @@
                         <span id="pid_polling_min_voltage_value">12.0</span>V
                     </td>
                 </tr>
+                <tr id="boot_pid_polling_keep_alive_seconds_row">
+                    <td>Keep-alive on bootup (seconds):</td>
+                    <td>
+                        <input type="number"
+                               id="boot_pid_polling_keep_alive_seconds"
+                               name="boot_pid_polling_keep_alive_seconds"
+                               value="30"
+                               min="0"
+                               step="1"
+                               onchange="enableAutoStoreButton(); submit_enable();"
+                               oninput="enableAutoStoreButton(); submit_enable();">
+                    </td>
+                </tr>
                 <tr id="supply_mode_row">
                     <td>Keep-alive on 12v Supply:</td>
                     <td>

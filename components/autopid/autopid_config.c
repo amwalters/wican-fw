@@ -448,6 +448,7 @@ static void parse_auto_pid_json(autopid_config_t *autopid_config, int *pid_index
     cJSON *ha_discovery_item = cJSON_GetObjectItem(root, "ha_discovery");
     cJSON *disable_on_sleep_voltage_item = cJSON_GetObjectItem(root, "disable_on_sleep_voltage");
     cJSON *pid_polling_min_voltage_item = cJSON_GetObjectItem(root, "pid_polling_min_voltage");
+    cJSON *boot_pid_polling_keep_alive_seconds_item = cJSON_GetObjectItem(root, "boot_pid_polling_keep_alive_seconds");
     cJSON *voltage_rise_wakeup_item = cJSON_GetObjectItem(root, "voltage_rise_wakeup");
     cJSON *voltage_rise_threshold_item = cJSON_GetObjectItem(root, "voltage_rise_threshold");
     cJSON *voltage_rise_time_seconds_item = cJSON_GetObjectItem(root, "voltage_rise_time_seconds");
@@ -525,6 +526,27 @@ static void parse_auto_pid_json(autopid_config_t *autopid_config, int *pid_index
         if (v >= 9.0f && v <= 18.0f)
         {
             autopid_config->pid_polling_min_voltage = v;
+        }
+    }
+
+    if (boot_pid_polling_keep_alive_seconds_item)
+    {
+        if (cJSON_IsNumber(boot_pid_polling_keep_alive_seconds_item))
+        {
+            double seconds = boot_pid_polling_keep_alive_seconds_item->valuedouble;
+            autopid_config->boot_pid_polling_keep_alive_seconds =
+                seconds > 0.0 ? (uint32_t)seconds : 0;
+        }
+        else if (cJSON_IsString(boot_pid_polling_keep_alive_seconds_item) &&
+                 boot_pid_polling_keep_alive_seconds_item->valuestring)
+        {
+            char *endptr = NULL;
+            long seconds = strtol(boot_pid_polling_keep_alive_seconds_item->valuestring, &endptr, 10);
+            if (endptr != boot_pid_polling_keep_alive_seconds_item->valuestring)
+            {
+                autopid_config->boot_pid_polling_keep_alive_seconds =
+                    seconds > 0 ? (uint32_t)seconds : 0;
+            }
         }
     }
 
@@ -967,6 +989,8 @@ autopid_config_t *load_autopid_config(void)
 
     autopid_config_t *cfg = (autopid_config_t *)heap_caps_calloc(1, sizeof(autopid_config_t), MALLOC_CAP_8BIT | MALLOC_CAP_SPIRAM);
     if (!cfg) return NULL;
+
+    cfg->boot_pid_polling_keep_alive_seconds = 30;
     
     // 1. Load Files
     cJSON *root_auto = load_json_root_from_mount("auto_pid.json");

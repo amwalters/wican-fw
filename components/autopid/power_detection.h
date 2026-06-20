@@ -35,6 +35,7 @@ typedef struct
     float voltage;
 } power_detection_pid_polling_state_t;
 
+bool power_detection_is_boot_pid_polling_keep_alive_active(const autopid_config_t *config);
 bool power_detection_should_pause_pid_polling(const autopid_config_t *config, float *out_voltage, const char **out_reason);
 power_detection_pid_polling_state_t power_detection_get_pid_polling_state(void);
 esp_err_t power_detection_start_load_test(void);
